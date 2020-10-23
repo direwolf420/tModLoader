@@ -17,10 +17,10 @@ namespace ExampleMod.Items
 			item.height = 20;
 			item.maxStack = 20;
 			item.value = 100;
-			item.rare = 1;
+			item.rare = ItemRarityID.Blue;
 			item.useAnimation = 30;
 			item.useTime = 30;
-			item.useStyle = 4;
+			item.useStyle = ItemUseStyleID.HoldingUp;
 			item.consumable = true;
 		}
 
@@ -36,8 +36,8 @@ namespace ExampleMod.Items
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("BossItem"), 10);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<BossItem>(), 10);
+			recipe.AddTile(ModContent.TileType<Tiles.ExampleWorkbench>());
 			recipe.SetResult(this, 20);
 			recipe.AddRecipe();
 		}

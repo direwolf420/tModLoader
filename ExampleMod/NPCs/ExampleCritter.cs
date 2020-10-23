@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoMod.Cil;
 using System;
-using System.Linq;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -22,7 +21,7 @@ namespace ExampleMod.NPCs
 
 		/// <summary>
 		/// Change the following code sequence in Wiring.HitWireSingle
-		/// num145 = Utils.SelectRandom(Main.rand, new short[5]
+		/// num12 = Utils.SelectRandom(Main.rand, new short[5]
 		/// {
 		/// 	359,
 		/// 	359,
@@ -42,7 +41,7 @@ namespace ExampleMod.NPCs
 		/// 	360,
 		/// }
 		/// arr = arr.ToList().Add(id).ToArray();
-		/// num145 = Utils.SelectRandom(Main.rand, arr);
+		/// num12 = Utils.SelectRandom(Main.rand, arr);
 		/// 
 		/// </summary>
 		/// <param name="il"></param>
@@ -78,13 +77,9 @@ namespace ExampleMod.NPCs
 					;
 				}
 
-				// not enough switch instructions
-				if (targets.Length < 56 - offset) {
-					continue;
-				}
-
-				var target = targets[56 - offset];
-				if (target == null) {
+				// get the label for case 56: if it exists
+				int case56Index = 56 - offset;
+				if (case56Index < 0 || case56Index >= targets.Length || !(targets[case56Index] is ILLabel target)) {
 					continue;
 				}
 
@@ -129,7 +124,7 @@ namespace ExampleMod.NPCs
 			//npc.catchItem = 2007;
 
 			npc.CloneDefaults(NPCID.GlowingSnail);
-			npc.catchItem = (short)mod.ItemType<ExampleCritterItem>();
+			npc.catchItem = (short)ModContent.ItemType<ExampleCritterItem>();
 			npc.lavaImmune = true;
 			//npc.aiStyle = 0;
 			npc.friendly = true; // We have to add this and CanBeHitByItem/CanBeHitByProjectile because of reasons.
@@ -189,6 +184,23 @@ namespace ExampleMod.NPCs
 			return base.PreAI();
 		}
 
+		public override void OnCatchNPC(Player player, Item item) {
+			item.stack = 2;
+
+			try {
+				var npcCenter = npc.Center.ToTileCoordinates();
+				if (!WorldGen.SolidTile(npcCenter.X, npcCenter.Y) && Main.tile[npcCenter.X, npcCenter.Y].liquid == 0) {
+					Main.tile[npcCenter.X, npcCenter.Y].liquid = (byte)Main.rand.Next(50, 150);
+					Main.tile[npcCenter.X, npcCenter.Y].lava(true);
+					Main.tile[npcCenter.X, npcCenter.Y].honey(false);
+					WorldGen.SquareTileFrame(npcCenter.X, npcCenter.Y, true);
+				}
+			}
+			catch {
+				return;
+			}
+		}
+
 		// TODO: Hooks for Collision_MoveSnailOnSlopes and npc.aiStyle = 67 problem
 	}
 
@@ -214,7 +226,7 @@ namespace ExampleMod.NPCs
 
 			item.CloneDefaults(ItemID.GlowingSnail);
 			item.bait = 17;
-			item.makeNPC = (short)mod.NPCType<ExampleCritterNPC>();
+			item.makeNPC = (short)ModContent.NPCType<ExampleCritterNPC>();
 		}
 	}
 }

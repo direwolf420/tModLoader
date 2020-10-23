@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Terraria.ModLoader.UI;
 using Terraria.UI;
 
 namespace Terraria.ModLoader.Config.UI
@@ -38,6 +39,7 @@ namespace Terraria.ModLoader.Config.UI
 					memberInfo.SetValue(item, current);
 				else
 					array[index] = current;
+				Interface.modConfig.SetPendingChanges();
 			}
 			public Vector2Object(PropertyFieldWrapper memberInfo, object item) {
 				this.item = item;

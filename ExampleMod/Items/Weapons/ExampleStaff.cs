@@ -1,3 +1,5 @@
+using ExampleMod.Projectiles;
+using ExampleMod.Tiles;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -19,21 +21,21 @@ namespace ExampleMod.Items.Weapons
 			item.height = 40;
 			item.useTime = 25;
 			item.useAnimation = 25;
-			item.useStyle = 5;
+			item.useStyle = ItemUseStyleID.HoldingOut;
 			item.noMelee = true; //so the item's animation doesn't do damage
 			item.knockBack = 5;
 			item.value = 10000;
-			item.rare = 2;
+			item.rare = ItemRarityID.Green;
 			item.UseSound = SoundID.Item20;
 			item.autoReuse = true;
-			item.shoot = mod.ProjectileType("SparklingBall");
+			item.shoot = ModContent.ProjectileType<SparklingBall>();
 			item.shootSpeed = 16f;
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 10);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 10);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

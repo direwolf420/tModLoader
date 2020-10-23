@@ -20,7 +20,7 @@ namespace ExampleMod.Commands
 			const string key = "Mods.ExampleMod.VolcanoWarning";
 			Color messageColor = Color.Orange;
 			NetMessage.BroadcastChatMessage(NetworkText.FromKey(key), messageColor);
-			ExampleWorld exampleWorld = mod.GetModWorld<ExampleWorld>();
+			ExampleWorld exampleWorld = ModContent.GetInstance<ExampleWorld>();
 			exampleWorld.VolcanoCountdown = ExampleWorld.DefaultVolcanoCountdown;
 			exampleWorld.VolcanoCooldown = ExampleWorld.DefaultVolcanoCooldown;
 		}

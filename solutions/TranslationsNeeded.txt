@@ -1,8 +1,6 @@
 zh-Hans 1
-ru-RU 78
-pt-BR 253
-pl-PL 164
-it-IT 237
-fr-FR 1
-es-ES 237
-de-DE 7
+pt-BR 260
+pl-PL 171
+it-IT 303
+fr-FR 8
+de-DE 14

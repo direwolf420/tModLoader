@@ -1,4 +1,6 @@
+using ExampleMod.Items;
 using ExampleMod.NPCs;
+using ExampleMod.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
@@ -16,7 +18,6 @@ namespace ExampleMod
 {
 	public class ExampleWorld : ModWorld
 	{
-		private const int saveVersion = 0;
 		public static bool downedAbomination;
 		public static bool downedPuritySpirit;
 		public const int VolcanoProjectiles = 30;
@@ -74,7 +75,7 @@ namespace ExampleMod
 		}
 
 		public override void NetSend(BinaryWriter writer) {
-			BitsByte flags = new BitsByte();
+			var flags = new BitsByte();
 			flags[0] = downedAbomination;
 			flags[1] = downedPuritySpirit;
 			writer.Write(flags);
@@ -159,14 +160,14 @@ namespace ExampleMod
 
 			// Ores are quite simple, we simply use a for loop and the WorldGen.TileRunner to place splotches of the specified Tile in the world.
 			// "6E-05" is "scientific notation". It simply means 0.00006 but in some ways is easier to read.
-			for (int k = 0; k < (int)((double)(Main.maxTilesX * Main.maxTilesY) * 6E-05); k++) {
+			for (int k = 0; k < (int)((Main.maxTilesX * Main.maxTilesY) * 6E-05); k++) {
 				// The inside of this for loop corresponds to one single splotch of our Ore.
 				// First, we randomly choose any coordinate in the world by choosing a random x and y value.
 				int x = WorldGen.genRand.Next(0, Main.maxTilesX);
 				int y = WorldGen.genRand.Next((int)WorldGen.worldSurfaceLow, Main.maxTilesY); // WorldGen.worldSurfaceLow is actually the highest surface tile. In practice you might want to use WorldGen.rockLayer or other WorldGen values.
 
 				// Then, we call WorldGen.TileRunner with random "strength" and random "steps", as well as the Tile we wish to place. Feel free to experiment with strength and step to see the shape they generate.
-				WorldGen.TileRunner(x, y, (double)WorldGen.genRand.Next(3, 6), WorldGen.genRand.Next(2, 6), mod.TileType("ExampleOre"), false, 0f, 0f, false, true);
+				WorldGen.TileRunner(x, y, WorldGen.genRand.Next(3, 6), WorldGen.genRand.Next(2, 6), ModContent.TileType<ExampleOre>());
 
 				// Alternately, we could check the tile already present in the coordinate we are interested. Wrapping WorldGen.TileRunner in the following condition would make the ore only generate in Snow.
 				// Tile tile = Framing.GetTileSafely(x, y);
@@ -186,7 +187,7 @@ namespace ExampleMod
 			for (int k = 0; k < (int)((double)(Main.maxTilesX * Main.maxTilesY) * 6E-05); k++) {
 				bool placeSuccessful = false;
 				Tile tile;
-				int tileToPlace = mod.TileType<Tiles.ExampleCutTileTile>();
+				int tileToPlace = ModContent.TileType<ExampleCutTileTile>();
 				while (!placeSuccessful) {
 					int x = WorldGen.genRand.Next(0, Main.maxTilesX);
 					int y = WorldGen.genRand.Next(0, Main.maxTilesY);
@@ -370,21 +371,21 @@ namespace ExampleMod
 			//}
 
 			// Here we spawn Example Person just like the Guide.
-			int num = NPC.NewNPC((Main.spawnTileX + 5) * 16, Main.spawnTileY * 16, mod.NPCType("Example Person"), 0, 0f, 0f, 0f, 0f, 255);
+			int num = NPC.NewNPC((Main.spawnTileX + 5) * 16, Main.spawnTileY * 16, ModContent.NPCType<ExamplePerson>(), 0, 0f, 0f, 0f, 0f, 255);
 			Main.npc[num].homeTileX = Main.spawnTileX + 5;
 			Main.npc[num].homeTileY = Main.spawnTileY;
 			Main.npc[num].direction = 1;
 			Main.npc[num].homeless = true;
 
 			// Place some items in Ice Chests
-			int[] itemsToPlaceInIceChests = { mod.ItemType("CarKey"), mod.ItemType("ExampleLightPet"), ItemID.PinkJellyfishJar };
+			int[] itemsToPlaceInIceChests = { ModContent.ItemType<CarKey>(), ModContent.ItemType<ExampleLightPet>(), ItemID.PinkJellyfishJar };
 			int itemsToPlaceInIceChestsChoice = 0;
 			for (int chestIndex = 0; chestIndex < 1000; chestIndex++) {
 				Chest chest = Main.chest[chestIndex];
 				// If you look at the sprite for Chests by extracting Tiles_21.xnb, you'll see that the 12th chest is the Ice Chest. Since we are counting from 0, this is where 11 comes from. 36 comes from the width of each tile including padding. 
 				if (chest != null && Main.tile[chest.x, chest.y].type == TileID.Containers && Main.tile[chest.x, chest.y].frameX == 11 * 36) {
 					for (int inventoryIndex = 0; inventoryIndex < 40; inventoryIndex++) {
-						if (chest.item[inventoryIndex].type == 0) {
+						if (chest.item[inventoryIndex].type == ItemID.None) {
 							chest.item[inventoryIndex].SetDefaults(itemsToPlaceInIceChests[itemsToPlaceInIceChestsChoice]);
 							itemsToPlaceInIceChestsChoice = (itemsToPlaceInIceChestsChoice + 1) % itemsToPlaceInIceChests.Length;
 							// Alternate approach: Random instead of cyclical: chest.item[inventoryIndex].SetDefaults(Main.rand.Next(itemsToPlaceInIceChests));
@@ -402,7 +403,11 @@ namespace ExampleMod
 		}
 
 		public override void TileCountsAvailable(int[] tileCounts) {
-			exampleTiles = tileCounts[mod.TileType("ExampleBlock")];
+			// Here we count various tiles towards ZoneExample
+			exampleTiles = tileCounts[ModContent.TileType<ExampleBlock>()] + tileCounts[ModContent.TileType<ExampleSand>()];
+
+			// We can also add to vanilla biome counts if appropriate. Here we are adding to the ZoneDesert since we have a sand tile in the mod.
+			Main.sandTiles += tileCounts[ModContent.TileType<ExampleSand>()];
 		}
 
 		public override void PreUpdate() {
@@ -415,14 +420,14 @@ namespace ExampleMod
 				if (VolcanoCooldown > 0) {
 					VolcanoCooldown--;
 				}
-				if (VolcanoCooldown <= 0 && Main.rand.NextBool(VolcanoChance) && !ExampleMod.exampleServerConfig.DisableVolcanos) {
+				if (VolcanoCooldown <= 0 && Main.rand.NextBool(VolcanoChance) && !ModContent.GetInstance<ExampleConfigServer>().DisableVolcanoes) {
 					string key = "Mods.ExampleMod.VolcanoWarning";
 					Color messageColor = Color.Orange;
-					if (Main.netMode == 2) // Server
+					if (Main.netMode == NetmodeID.Server) // Server
 					{
 						NetMessage.BroadcastChatMessage(NetworkText.FromKey(key), messageColor);
 					}
-					else if (Main.netMode == 0) // Single Player
+					else if (Main.netMode == NetmodeID.SinglePlayer) // Single Player
 					{
 						Main.NewText(Language.GetTextValue(key), messageColor);
 					}
@@ -435,7 +440,7 @@ namespace ExampleMod
 				if (VolcanoCountdown == 0) {
 					VolcanoTremorTime = DefaultVolcanoTremorTime;
 					// Since PostUpdate only happens in single and server, we need to inform the clients to shake if this is a server
-					if (Main.netMode == 2) {
+					if (Main.netMode == NetmodeID.Server) {
 						var netMessage = mod.GetPacket();
 						netMessage.Write((byte)ExampleModMessageType.SetTremorTime);
 						netMessage.Write(VolcanoTremorTime);
@@ -447,11 +452,11 @@ namespace ExampleMod
 							int speed = 12;
 							float spawnX = Main.rand.Next(1000) - 500 + player.Center.X;
 							float spawnY = -1000 + player.Center.Y;
-							Vector2 baseSpawn = new Vector2(spawnX, spawnY);
+							var baseSpawn = new Vector2(spawnX, spawnY);
 							Vector2 baseVelocity = player.Center - baseSpawn;
 							baseVelocity.Normalize();
 							baseVelocity = baseVelocity * speed;
-							List<int> identities = new List<int>();
+							var identities = new List<int>();
 							for (int i = 0; i < VolcanoProjectiles; i++) {
 								Vector2 spawn = baseSpawn;
 								spawn.X = spawn.X + i * 30 - VolcanoProjectiles * 15;
@@ -463,7 +468,7 @@ namespace ExampleMod
 								Main.projectile[projectile].Name = "Volcanic Rubble";
 								identities.Add(Main.projectile[projectile].identity);
 							}
-							if (Main.netMode == 2) {
+							if (Main.netMode == NetmodeID.Server) {
 								var netMessage = mod.GetPacket();
 								netMessage.Write((byte)ExampleModMessageType.VolcanicRubbleMultiplayerFix);
 								netMessage.Write(identities.Count);
@@ -481,17 +486,17 @@ namespace ExampleMod
 		// In ExampleMod, we use PostDrawTiles to draw the TEScoreBoard area. PostDrawTiles draws before players, npc, and projectiles, so it works well.
 		public override void PostDrawTiles() {
 			Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.instance.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-			Rectangle screenRect = new Rectangle((int)Main.screenPosition.X, (int)Main.screenPosition.Y, Main.screenWidth, Main.screenHeight);
-			screenRect.Inflate(Tiles.TEScoreBoard.drawBorderWidth, Tiles.TEScoreBoard.drawBorderWidth);
-			int scoreBoardType = mod.TileEntityType<Tiles.TEScoreBoard>();
+			var screenRect = new Rectangle((int)Main.screenPosition.X, (int)Main.screenPosition.Y, Main.screenWidth, Main.screenHeight);
+			screenRect.Inflate(TEScoreBoard.drawBorderWidth, TEScoreBoard.drawBorderWidth);
+			int scoreBoardType = ModContent.TileEntityType<TEScoreBoard>();
 			foreach (var item in TileEntity.ByID) {
 				if (item.Value.type == scoreBoardType) {
-					var scoreBoard = item.Value as Tiles.TEScoreBoard;
+					var scoreBoard = item.Value as TEScoreBoard;
 					Rectangle scoreBoardArea = scoreBoard.GetPlayArea();
 					// We only want to draw while the area is visible. 
 					if (screenRect.Intersects(scoreBoardArea)) {
 						scoreBoardArea.Offset((int)-Main.screenPosition.X, (int)-Main.screenPosition.Y);
-						DrawBorderedRect(Main.spriteBatch, Color.LightBlue * 0.1f, Color.Blue * 0.3f, scoreBoardArea.TopLeft(), scoreBoardArea.Size(), Tiles.TEScoreBoard.drawBorderWidth);
+						DrawBorderedRect(Main.spriteBatch, Color.LightBlue * 0.1f, Color.Blue * 0.3f, scoreBoardArea.TopLeft(), scoreBoardArea.Size(), TEScoreBoard.drawBorderWidth);
 					}
 				}
 			}

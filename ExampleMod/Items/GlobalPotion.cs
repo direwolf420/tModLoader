@@ -1,3 +1,4 @@
+using ExampleMod.Buffs;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -14,7 +15,7 @@ namespace ExampleMod.Items
 						heal = damage;
 					}
 					if (heal > 0) {
-						player.AddBuff(mod.BuffType("Undead2"), 2 * heal, false);
+						player.AddBuff(ModContent.BuffType<Undead2>(), 2 * heal, false);
 					}
 				}
 			}

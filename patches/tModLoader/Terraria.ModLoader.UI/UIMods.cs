@@ -23,6 +23,7 @@ namespace Terraria.ModLoader.UI
 		private UILoaderAnimatedImage uiLoader;
 		private bool needToRemoveLoading;
 		private UIList modList;
+		private float modListViewPosition;
 		private readonly List<UIModItem> items = new List<UIModItem>();
 		private bool updateNeeded;
 		public bool loading;
@@ -78,8 +79,8 @@ namespace Terraria.ModLoader.UI
 			}
 
 			var uIScrollbar = new UIScrollbar {
-				Height = { Pixels = -50, Percent = 1f },
-				Top = { Pixels = 50 },
+				Height = { Pixels = ModLoader.showMemoryEstimates ? -72 : -50, Percent = 1f },
+				Top = { Pixels = ModLoader.showMemoryEstimates ? 72 : 50 },
 				HAlign = 1f
 			}.WithView(100f, 1000f);
 			uIPanel.Append(uIScrollbar);
@@ -247,7 +248,7 @@ namespace Terraria.ModLoader.UI
 		private static void OpenModsFolder(UIMouseEvent evt, UIElement listeningElement) {
 			Main.PlaySound(10, -1, -1, 1);
 			Directory.CreateDirectory(ModLoader.ModPath);
-			Process.Start(ModLoader.ModPath);
+			Utils.OpenFolder(ModLoader.ModPath);
 		}
 
 		private static void GotoModPacksMenu(UIMouseEvent evt, UIElement listeningElement) {
@@ -259,16 +260,20 @@ namespace Terraria.ModLoader.UI
 
 		private void EnableAll(UIMouseEvent evt, UIElement listeningElement) {
 			Main.PlaySound(12, -1, -1, 1);
+			ModLoader.PauseSavingEnabledMods = true;
 			foreach (UIModItem modItem in items) {
 				modItem.Enable();
 			}
+			ModLoader.PauseSavingEnabledMods = false;
 		}
 
 		private void DisableAll(UIMouseEvent evt, UIElement listeningElement) {
 			Main.PlaySound(12, -1, -1, 1);
+			ModLoader.PauseSavingEnabledMods = true;
 			foreach (UIModItem modItem in items) {
 				modItem.Disable();
 			}
+			ModLoader.PauseSavingEnabledMods = false;
 		}
 
 		public UIModItem FindUIModItem(string modName) {
@@ -287,6 +292,7 @@ namespace Terraria.ModLoader.UI
 			modList.Clear();
 			modList.AddRange(items.Where(item => item.PassFilters()));
 			Recalculate();
+			modList.ViewPosition = modListViewPosition;
 		}
 
 		public override void Draw(SpriteBatch spriteBatch) {
@@ -333,6 +339,7 @@ namespace Terraria.ModLoader.UI
 			_cts?.Cancel(false);
 			_cts?.Dispose();
 			_cts = null;
+			modListViewPosition = modList.ViewPosition;
 		}
 
 		internal void Populate() {

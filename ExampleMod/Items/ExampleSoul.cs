@@ -26,7 +26,7 @@ namespace ExampleMod.Items
 			item.height = refItem.height;
 			item.maxStack = 999;
 			item.value = 1000;
-			item.rare = 3;
+			item.rare = ItemRarityID.Orange;
 		}
 
 		// The following 2 methods are purely to show off these 2 hooks. Don't use them in your own code.
@@ -51,7 +51,7 @@ namespace ExampleMod.Items
 	{
 		public override void NPCLoot(NPC npc) {
 			if (Main.player[(int)Player.FindClosest(npc.position, npc.width, npc.height)].GetModPlayer<ExamplePlayer>().ZoneExample) {
-				Item.NewItem(npc.getRect(), mod.ItemType("ExampleSoul"), 1);
+				Item.NewItem(npc.getRect(), ModContent.ItemType<ExampleSoul>(), 1);
 			}
 		}
 	}

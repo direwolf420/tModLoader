@@ -1,4 +1,5 @@
 ﻿using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace ExampleMod.Items.Placeable
 {
@@ -10,14 +11,14 @@ namespace ExampleMod.Items.Placeable
 		}
 
 		public override void SetDefaults() {
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.useTurn = true;
 			item.useAnimation = 15;
 			item.useTime = 10;
 			item.autoReuse = true;
 			item.maxStack = 999;
 			item.consumable = true;
-			item.createTile = mod.TileType<Tiles.ScoreBoard>();
+			item.createTile = ModContent.TileType<Tiles.ScoreBoard>();
 			item.width = 28;
 			item.height = 28;
 		}

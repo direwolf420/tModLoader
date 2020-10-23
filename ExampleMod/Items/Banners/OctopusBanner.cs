@@ -1,5 +1,7 @@
+using ExampleMod.Tiles;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace ExampleMod.Items.Banners
 {
@@ -14,11 +16,11 @@ namespace ExampleMod.Items.Banners
 			item.autoReuse = true;
 			item.useAnimation = 15;
 			item.useTime = 10;
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.consumable = true;
-			item.rare = 1;
+			item.rare = ItemRarityID.Blue;
 			item.value = Item.buyPrice(0, 0, 10, 0);
-			item.createTile = mod.TileType("MonsterBanner");
+			item.createTile = ModContent.TileType<MonsterBanner>();
 			item.placeStyle = 1;        //Place style means which frame(Horizontally, starting from 0) of the tile should be placed
 		}
 	}

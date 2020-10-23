@@ -1,3 +1,4 @@
+using ExampleMod.Items.Abomination;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -14,17 +15,17 @@ namespace ExampleMod.Items.Placeable
 			item.autoReuse = true;
 			item.useAnimation = 15;
 			item.useTime = 10;
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.consumable = true;
-			item.rare = 10;
+			item.rare = ItemRarityID.Red;
 			item.value = Item.buyPrice(0, 20, 0, 0);
-			item.createTile = mod.TileType("ElementalPurge");
+			item.createTile = ModContent.TileType<Tiles.ElementalPurge>();
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("VoidMonolith"));
-			recipe.AddIngredient(mod.ItemType("ElementResidue"));
+			recipe.AddIngredient(ModContent.ItemType<VoidMonolith>());
+			recipe.AddIngredient(ModContent.ItemType<ElementResidue>());
 			recipe.AddTile(TileID.CrystalBall);
 			recipe.SetResult(this);
 			recipe.AddRecipe();

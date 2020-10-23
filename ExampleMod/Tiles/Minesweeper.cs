@@ -15,7 +15,7 @@ namespace ExampleMod.Tiles
 			// This tile is special because we need it to preserve the hidden mine tiles.
 			Main.tileFrameImportant[Type] = true; 
 			Main.tileSolid[Type] = true; // TODO: tModLoader hook for allowing non solid tiles to be hammer-able.
-			drop = mod.ItemType<MinesweeperItem>();
+			drop = ModContent.ItemType<MinesweeperItem>();
 		}
 
 		public override bool Dangersense(int i, int j, Player player) => IsMine(i, j);
@@ -27,7 +27,7 @@ namespace ExampleMod.Tiles
 			{
 				tile.frameX = 18;
 				TileFrame8Neighbors(i, j);
-				if (Main.netMode == 1) // If we are a multiplayer client, we need to inform the server of the changes we've made to the Tile.
+				if (Main.netMode == NetmodeID.MultiplayerClient) // If we are a multiplayer client, we need to inform the server of the changes we've made to the Tile.
 					NetMessage.SendTileSquare(-1, i, j, 1, TileChangeType.None);
 			}
 		}
@@ -46,7 +46,7 @@ namespace ExampleMod.Tiles
 				Main.projectile[projectile].netUpdate = true;
 				tile.frameX = 5 * 18;
 
-				if (Main.netMode == 1) // Slope is called on Clients, so we need to inform the server of changes.
+				if (Main.netMode == NetmodeID.MultiplayerClient) // Slope is called on Clients, so we need to inform the server of changes.
 					NetMessage.SendTileSquare(-1, i, j, 1, TileChangeType.None);
 			}
 			else
@@ -83,7 +83,7 @@ namespace ExampleMod.Tiles
 			}
 			if (changed)
 			{
-				if (Main.netMode == 1)
+				if (Main.netMode == NetmodeID.MultiplayerClient)
 					NetMessage.SendTileSquare(-1, i, j, 1, TileChangeType.None);
 
 				// Since this tile changed, we will change other nearby tiles. This isn't typical but is suitable for minesweeper. 
@@ -138,7 +138,7 @@ namespace ExampleMod.Tiles
 		public override void SetDefaults()
 		{
 			item.CloneDefaults(ItemID.DirtBlock);
-			item.createTile = mod.TileType<Minesweeper>();
+			item.createTile = ModContent.TileType<Minesweeper>();
 		}
 	}
 }

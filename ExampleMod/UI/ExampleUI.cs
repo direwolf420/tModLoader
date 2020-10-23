@@ -186,23 +186,8 @@ namespace ExampleMod.UI
 	public class MoneyCounterGlobalItem : GlobalItem
 	{
 		public override bool OnPickup(Item item, Player player) {
-			switch (item.type)
-			{
-				case ItemID.CopperCoin:
-					ExampleMod.Instance.ExampleUI.UpdateValue(item.stack);
-					// We can cast mod to ExampleMod or just utilize ExampleMod.instance.
-					// (mod as ExampleMod).exampleUI.updateValue(item.stack);
-					break;
-				case ItemID.SilverCoin:
-					ExampleMod.Instance.ExampleUI.UpdateValue(item.stack * 100);
-					break;
-				case ItemID.GoldCoin:
-					ExampleMod.Instance.ExampleUI.UpdateValue(item.stack * 10000);
-					break;
-				case ItemID.PlatinumCoin:
-					ExampleMod.Instance.ExampleUI.UpdateValue(item.stack * 1000000);
-					break;
-			}
+			if (item.type >= ItemID.CopperCoin && item.type <= ItemID.PlatinumCoin)
+				ModContent.GetInstance<ExampleMod>().ExampleUI.UpdateValue(item.stack * (item.value / 5));
 
 			return base.OnPickup(item, player);
 		}

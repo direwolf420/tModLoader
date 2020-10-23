@@ -11,9 +11,13 @@ namespace ExampleMod.Items
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
+		}
+
+		public override bool CanBurnInLava() {
+			return true;
 		}
 	}
 }

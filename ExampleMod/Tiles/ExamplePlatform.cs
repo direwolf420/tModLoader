@@ -1,3 +1,4 @@
+using ExampleMod.Dusts;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -28,8 +29,8 @@ namespace ExampleMod.Tiles
 			TileObjectData.addTile(Type);
 			AddToArray(ref TileID.Sets.RoomNeeds.CountsAsDoor);
 			AddMapEntry(new Color(200, 200, 200));
-			dustType = mod.DustType("Sparkle");
-			drop = mod.ItemType("ExamplePlatform");
+			dustType = ModContent.DustType<Sparkle>();
+			drop = ModContent.ItemType<Items.Placeable.ExamplePlatform>();
 			disableSmartCursor = true;
 			adjTiles = new int[] { TileID.Platforms };
 		}

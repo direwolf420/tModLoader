@@ -1,3 +1,4 @@
+using ExampleMod.Dusts;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -71,7 +72,7 @@ namespace ExampleMod.NPCs.Abomination
 				}
 				npc.localAI[0] = 1f;
 			}
-			if (NPC.AnyNPCs(mod.NPCType("CaptiveElement2"))) {
+			if (NPC.AnyNPCs(ModContent.NPCType<CaptiveElement2>())) {
 				if (npc.timeLeft < 750) {
 					npc.timeLeft = 750;
 				}
@@ -107,14 +108,14 @@ namespace ExampleMod.NPCs.Abomination
 			Color? color = GetColor();
 			if (color.HasValue) {
 				for (int k = 0; k < 5; k++) {
-					int dust = Dust.NewDust(npc.position, npc.width, npc.height, mod.DustType("Pixel"), 0f, 0f, 0, color.Value);
+					int dust = Dust.NewDust(npc.position, npc.width, npc.height, ModContent.DustType<Pixel>(), 0f, 0f, 0, color.Value);
 					double angle = Main.rand.NextDouble() * 2.0 * Math.PI;
 					Main.dust[dust].velocity = 3f * new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
 				}
 			}
 			else {
 				for (int k = 0; k < 1; k++) {
-					int dust = Dust.NewDust(npc.position, npc.width, npc.height, mod.DustType("Bubble"), 0f, 0f, 0);
+					int dust = Dust.NewDust(npc.position, npc.width, npc.height, ModContent.DustType<Bubble>(), 0f, 0f, 0);
 					double angle = Main.rand.NextDouble() * 2.0 * Math.PI;
 					Main.dust[dust].velocity = 2f * new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
 				}

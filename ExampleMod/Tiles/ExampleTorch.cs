@@ -1,3 +1,4 @@
+using ExampleMod.Dusts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -18,6 +19,7 @@ namespace ExampleMod.Tiles
 			Main.tileNoAttach[Type] = true;
 			Main.tileNoFail[Type] = true;
 			Main.tileWaterDeath[Type] = true;
+			TileID.Sets.FramesOnKillWall[Type] = true;
 			TileObjectData.newTile.CopyFrom(TileObjectData.StyleTorch);
 			TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
 			TileObjectData.newAlternate.CopyFrom(TileObjectData.StyleTorch);
@@ -36,8 +38,8 @@ namespace ExampleMod.Tiles
 			ModTranslation name = CreateMapEntryName();
 			name.SetDefault("Torch");
 			AddMapEntry(new Color(200, 200, 200), name);
-			dustType = mod.DustType("Sparkle");
-			drop = mod.ItemType("ExampleTorch");
+			dustType = ModContent.DustType<Sparkle>();
+			drop = ModContent.ItemType<Items.Placeable.ExampleTorch>();
 			disableSmartCursor = true;
 			adjTiles = new int[] { TileID.Torches };
 			torch = true;

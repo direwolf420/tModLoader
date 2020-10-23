@@ -11,6 +11,7 @@ using Terraria.Localization;
 using Terraria.ModLoader.Config;
 using Terraria.ModLoader.Core;
 using Terraria.ModLoader.UI.DownloadManager;
+using Terraria.ModLoader.UI;
 
 namespace Terraria.ModLoader
 {
@@ -123,7 +124,7 @@ namespace Terraria.ModLoader
 			p.Write(serverConfigs.Length);
 			foreach (var config in serverConfigs) {
 				string json = JsonConvert.SerializeObject(config, ConfigManager.serializerSettingsCompact);
-				Logging.Terraria.Info($"Sending Server Config {config.Name}: {json}");
+				Logging.Terraria.Info($"Sending Server Config {config.mod.Name} {config.Name}: {json}");
 
 				p.Write(config.Name);
 				p.Write(json);
@@ -265,9 +266,7 @@ namespace Terraria.ModLoader
 
 			try {
 				if (downloadingFile == null) {
-					Interface.progress.DisplayText = reader.ReadString();
-					Interface.progress.OnCancel += CancelDownload;
-					Interface.progress.Show();
+					Interface.progress.Show(displayText: reader.ReadString(), cancel: CancelDownload);
 
 					ModLoader.GetMod(downloadingMod.name)?.Close();
 					downloadingLength = reader.ReadInt64();
@@ -277,7 +276,7 @@ namespace Terraria.ModLoader
 
 				var bytes = reader.ReadBytes((int)Math.Min(downloadingLength - downloadingFile.Position, CHUNK_SIZE));
 				downloadingFile.Write(bytes, 0, bytes.Length);
-				Interface.progress.Progress = downloadingFile.Position / downloadingLength;
+				Interface.progress.Progress = downloadingFile.Position / (float)downloadingLength;
 
 				if (downloadingFile.Position == downloadingLength) {
 					downloadingFile.Close();
@@ -287,7 +286,7 @@ namespace Terraria.ModLoader
 					if (!downloadingMod.Matches(mod))
 						throw new Exception(Language.GetTextValue("tModLoader.MPErrorModHashMismatch"));
 
-					if (downloadingMod.signed && !mod.ValidModBrowserSignature)
+					if (downloadingMod.signed && onlyDownloadSignedMods && !mod.ValidModBrowserSignature)
 						throw new Exception(Language.GetTextValue("tModLoader.MPErrorModNotSigned"));
 
 					ModLoader.EnableMod(mod.name);
@@ -325,11 +324,13 @@ namespace Terraria.ModLoader
 
 		private static void OnModsDownloaded(bool needsReload) {
 			if (needsReload) {
+				Main.netMode = 0;
 				ModLoader.OnSuccessfulLoad = NetReload();
 				ModLoader.Reload();
 				return;
 			}
 
+			Main.netMode = 1;
 			downloadingMod = null;
 			netMods = null;
 			foreach (var mod in ModLoader.Mods)
@@ -338,11 +339,14 @@ namespace Terraria.ModLoader
 			new ModPacket(MessageID.SyncMods).Send();
 		}
 
+		internal static bool NetReloadActive;
 		internal static Action NetReload() {
 			// Main.ActivePlayerFileData gets cleared during reload
 			var path = Main.ActivePlayerFileData.Path;
 			var isCloudSave = Main.ActivePlayerFileData.IsCloudSave;
+			NetReloadActive = true;
 			return () => {
+				NetReloadActive = false;
 				// re-select the current player
 				Player.GetFileData(path, isCloudSave).SetAsActive();
 				//from Netplay.ClientLoopSetup
@@ -362,6 +366,7 @@ namespace Terraria.ModLoader
 
 			ItemLoader.WriteNetGlobalOrder(p);
 			WorldHooks.WriteNetWorldOrder(p);
+			p.Write(Player.MaxBuffs);
 
 			p.Send(toClient);
 		}
@@ -382,8 +387,15 @@ namespace Terraria.ModLoader
 
 			ItemLoader.ReadNetGlobalOrder(reader);
 			WorldHooks.ReadNetWorldOrder(reader);
+			int serverMaxBuffs = reader.ReadInt32();
+			if (serverMaxBuffs != Player.MaxBuffs) {
+				Netplay.disconnect = true;
+				Main.statusText = $"The server expects Player.MaxBuffs of {serverMaxBuffs}\nbut this client reports {Player.MaxBuffs}.\nSome mod is behaving poorly.";
+			}
 		}
 
+		// Some mods have expressed concern about read underflow exceptions conflicting with their ModPacket design, they can use reflection to set this bool as a bandaid until they fix their code.
+		internal static bool ReadUnderflowBypass = false; // Remove by 0.11.7
 		internal static void HandleModPacket(BinaryReader reader, int whoAmI, int length) {
 			if (netMods == null) {
 				ReadNetIDs(reader);
@@ -391,7 +403,16 @@ namespace Terraria.ModLoader
 			}
 
 			var id = NetModCount < 256 ? reader.ReadByte() : reader.ReadInt16();
-			GetMod(id)?.HandlePacket(reader, whoAmI);
+			int start = (int)reader.BaseStream.Position;
+			int actualLength = length - 1 - (NetModCount < 256 ? 1 : 2);
+			try {
+				ReadUnderflowBypass = false;
+				GetMod(id)?.HandlePacket(reader, whoAmI);
+				if (!ReadUnderflowBypass && reader.BaseStream.Position - start != actualLength) {
+					throw new IOException($"Read underflow {reader.BaseStream.Position - start} of {actualLength} bytes caused by {GetMod(id).Name} in HandlePacket");
+				}
+			}
+			catch { }
 
 			if (Main.netMode == 1) {
 				rxMsgType[id]++;

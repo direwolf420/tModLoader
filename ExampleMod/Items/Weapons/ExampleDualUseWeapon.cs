@@ -1,3 +1,4 @@
+using ExampleMod.Tiles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -18,10 +19,10 @@ namespace ExampleMod.Items.Weapons
 			item.height = 40;
 			item.useTime = 20;
 			item.useAnimation = 20;
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.knockBack = 6;
 			item.value = 10000;
-			item.rare = 2;
+			item.rare = ItemRarityID.Green;
 			item.UseSound = SoundID.Item1;
 			item.autoReuse = true;
 			item.shoot = ProjectileID.Bee;
@@ -30,8 +31,8 @@ namespace ExampleMod.Items.Weapons
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 10);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 10);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}
@@ -42,18 +43,18 @@ namespace ExampleMod.Items.Weapons
 
 		public override bool CanUseItem(Player player) {
 			if (player.altFunctionUse == 2) {
-				item.useStyle = 3;
+				item.useStyle = ItemUseStyleID.Stabbing;
 				item.useTime = 20;
 				item.useAnimation = 20;
 				item.damage = 50;
 				item.shoot = ProjectileID.Bee;
 			}
 			else {
-				item.useStyle = 1;
+				item.useStyle = ItemUseStyleID.SwingThrow;
 				item.useTime = 40;
 				item.useAnimation = 40;
 				item.damage = 100;
-				item.shoot = 0;
+				item.shoot = ProjectileID.None;
 			}
 			return base.CanUseItem(player);
 		}

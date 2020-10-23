@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
+using Terraria.ModLoader.UI;
 using Terraria.Utilities;
 
 namespace Terraria.ModLoader.Core
@@ -112,11 +112,13 @@ namespace Terraria.ModLoader.Core
 
 				try {
 					using (modFile.Open()) {
-						foreach (var dll in properties.dllReferences)
-							LoadAssembly(EncapsulateReferences(modFile.GetBytes("lib/" + dll + ".dll")));
+						foreach (var dllName in properties.dllReferences) {
+							LoadAssembly(EncapsulateReferences(modFile.GetLibraryDll(dllName)));
+						}
 
-						if (eacEnabled && HasEaC) //load the unmodified dll and EaC pdb
+						if (eacEnabled && HasEaC) {//load the unmodified dll and EaC pdb
 							assembly = LoadAssembly(modFile.GetModAssembly(), File.ReadAllBytes(properties.eacPath));
+						}
 						else {
 							var pdb = GetModPdb(out var imageDebugHeader);
 							assembly = LoadAssembly(EncapsulateReferences(modFile.GetModAssembly(), imageDebugHeader), pdb);
@@ -198,6 +200,14 @@ namespace Terraria.ModLoader.Core
 				bytesLoaded += code.LongLength + (pdb?.LongLength ?? 0);
 				if (pdb != null && FrameworkVersion.Framework == Framework.Mono)
 					MdbManager.RegisterMdb(GetMainModule(asm.GetName()), pdb);
+
+				if (Program.LaunchParameters.ContainsKey("-dumpasm")) {
+					var dumpdir = Path.Combine(Main.SavePath, "asmdump");
+					Directory.CreateDirectory(dumpdir);
+					File.WriteAllBytes(Path.Combine(dumpdir, asm.FullName+".dll"), code);
+					if (pdb != null)
+						File.WriteAllBytes(Path.Combine(dumpdir, asm.FullName+".pdb"), code);
+				}
 
 				return asm;
 			}
@@ -295,16 +305,16 @@ namespace Terraria.ModLoader.Core
 			try {
 				// can no longer load assemblies in parallel due to cecil assembly resolver during ModuleDefinition.Write requiring dependencies
 				// could use a topological parallel load but I doubt the performance is worth the development effort - Chicken Bones
-				Interface.loadModsProgress.SetLoadStage("tModLoader.MSSandboxing", modsToLoad.Count);
+				Interface.loadMods.SetLoadStage("tModLoader.MSSandboxing", modsToLoad.Count);
 				int i = 0;
 				foreach (var mod in modList) {
 					token.ThrowIfCancellationRequested();
-					Interface.loadModsProgress.SetCurrentMod(i++, mod.Name);
+					Interface.loadMods.SetCurrentMod(i++, mod.Name);
 					mod.LoadAssemblies();
 				}
 
 				//Assemblies must be loaded before any instantiation occurs to satisfy dependencies
-				Interface.loadModsProgress.SetLoadStage("tModLoader.MSInstantiating");
+				Interface.loadMods.SetLoadStage("tModLoader.MSInstantiating");
 				MemoryTracking.Checkpoint();
 				return modList.Select(mod => {
 					token.ThrowIfCancellationRequested();
@@ -326,7 +336,18 @@ namespace Terraria.ModLoader.Core
 			return fileName;
 		}
 
+		private static string GetLibraryDllFilename(this TmodFile modFile, string dllName, bool? xna = null)
+		{
+			string variant = (xna ?? PlatformUtilities.IsXNA) ? "XNA" : "FNA";
+			var fileName = $"lib/{dllName}.{variant}.dll";
+			if (!modFile.HasFile(fileName))
+				fileName = $"lib/{dllName}.dll";
+
+			return fileName;
+		}
+
 		internal static byte[] GetModAssembly(this TmodFile modFile, bool? xna = null) => modFile.GetBytes(modFile.GetModAssemblyFileName(xna));
+		internal static byte[] GetLibraryDll(this TmodFile modFile, string dllName, bool? xna = null) => modFile.GetBytes(modFile.GetLibraryDllFilename(dllName, xna));
 
 		internal static IEnumerable<Assembly> GetModAssemblies(string name) => loadedMods[name].assemblies;
 
@@ -359,8 +380,12 @@ namespace Terraria.ModLoader.Core
 
 		private class CecilAssemblyResolver : DefaultAssemblyResolver
 		{
+			private readonly AssemblyNameReference tMLAssemblyName;
+
 			public CecilAssemblyResolver() {
-				RegisterAssembly(ModuleDefinition.ReadModule(Assembly.GetExecutingAssembly().Location).Assembly);
+				var tMLAssembly = AssemblyDefinition.ReadAssembly(Assembly.GetExecutingAssembly().Location);
+				RegisterAssembly(tMLAssembly);
+				tMLAssemblyName = tMLAssembly.Name;
 			}
 
 			public new void RegisterAssembly(AssemblyDefinition asm) {
@@ -370,6 +395,9 @@ namespace Terraria.ModLoader.Core
 
 			public override AssemblyDefinition Resolve(AssemblyNameReference name) {
 				try {
+					if (name.Name == "Terraria")
+						name = tMLAssemblyName;
+
 					return base.Resolve(name);
 				}
 				catch (AssemblyResolutionException) {
@@ -387,19 +415,24 @@ namespace Terraria.ModLoader.Core
 			private AssemblyDefinition FallbackResolve(AssemblyNameReference name) {
 				string resourceName = name.Name + ".dll";
 				resourceName = Array.Find(typeof(Program).Assembly.GetManifestResourceNames(), element => element.EndsWith(resourceName));
+				MemoryStream ms;
 				if (resourceName != null) {
 					Logging.tML.DebugFormat("Generating ModuleDefinition for {0}", name);
-					using (var stream = typeof(Program).Assembly.GetManifestResourceStream(resourceName))
-						return AssemblyDefinition.ReadAssembly(stream, new ReaderParameters(ReadingMode.Immediate));
+					using (var stream = typeof(Program).Assembly.GetManifestResourceStream(resourceName)) {
+						ms = new MemoryStream();
+						stream.CopyTo(ms);
+						ms.Position = 0;
+					}
 				}
-
-				if (assemblyBinaries.TryGetValue(name.Name, out var modAssemblyBytes)) {
+				else if (assemblyBinaries.TryGetValue(name.Name, out var modAssemblyBytes)) {
 					Logging.tML.DebugFormat("Generating ModuleDefinition for {0}", name);
-					using (var stream = new MemoryStream(modAssemblyBytes))
-						return AssemblyDefinition.ReadAssembly(stream, new ReaderParameters(ReadingMode.Immediate));
+					ms = new MemoryStream(modAssemblyBytes);
+				}
+				else {
+					return null;
 				}
 
-				return null;
+				return AssemblyDefinition.ReadAssembly(ms, new ReaderParameters(ReadingMode.Immediate));
 			}
 		}
 

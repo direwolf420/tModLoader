@@ -17,7 +17,7 @@ namespace ExampleMod.NPCs
 		public override void SetDefaults() {
 			npc.width = 32;
 			npc.height = 32;
-			npc.aiStyle = -1; // This npc has a completely unique AI, so we set this to -1.
+			npc.aiStyle = -1; // This npc has a completely unique AI, so we set this to -1. The default aiStyle 0 will face the player, which might conflict with custom AI code.
 			npc.damage = 7;
 			npc.defense = 2;
 			npc.lifeMax = 25;
@@ -91,7 +91,7 @@ namespace ExampleMod.NPCs
 			}
 			// In this state, a player has been targeted
 			else if (AI_State == State_Notice) {
-				/// If the targeted player is in attack range (250).
+				// If the targeted player is in attack range (250).
 				if (Main.player[npc.target].Distance(npc.Center) < 250f) {
 					// Here we use our Timer to wait .33 seconds before actually jumping. In FindFrame you'll notice AI_Timer also being used to animate the pre-jump crouch
 					AI_Timer++;
@@ -129,7 +129,7 @@ namespace ExampleMod.NPCs
 				// netmode == 0 is SP, netmode == 1 is MP Client, netmode == 2 is MP Server. 
 				// Typically in MP, Client and Server maintain the same state by running deterministic code individually. When we want to do something random, we must do that on the server and then inform MP Clients.
 				// Informing MP Clients is done automatically by syncing the npc.ai array over the network whenever npc.netUpdate is set. Don't set netUpdate unless you do something non-deterministic ("random")
-				if (AI_Timer == 1 && Main.netMode != 1) {
+				if (AI_Timer == 1 && Main.netMode != NetmodeID.MultiplayerClient) {
 					// For reference: without proper syncing: https://gfycat.com/BackAnxiousFerret and with proper syncing: https://gfycat.com/TatteredKindlyDalmatian
 					AI_FlutterTime = Main.rand.NextBool() ? 100 : 50;
 					npc.netUpdate = true;

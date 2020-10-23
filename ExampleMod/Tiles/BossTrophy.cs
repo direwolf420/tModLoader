@@ -1,5 +1,7 @@
+using ExampleMod.Items.Placeable;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -10,6 +12,7 @@ namespace ExampleMod.Tiles
 		public override void SetDefaults() {
 			Main.tileFrameImportant[Type] = true;
 			Main.tileLavaDeath[Type] = true;
+			TileID.Sets.FramesOnKillWall[Type] = true; // Necessary since Style3x3Wall uses AnchorWall
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style3x3Wall);
 			TileObjectData.newTile.StyleHorizontal = true;
 			TileObjectData.newTile.StyleWrapLimit = 36;
@@ -25,16 +28,16 @@ namespace ExampleMod.Tiles
 			int item = 0;
 			switch (frameX / 54) {
 				case 0:
-					item = mod.ItemType("AbominationTrophy");
+					item = ModContent.ItemType<AbominationTrophy>();
 					break;
 				case 1:
-					item = mod.ItemType("PuritySpiritTrophy");
+					item = ModContent.ItemType<PuritySpiritTrophy>();
 					break;
 				case 2:
-					item = mod.ItemType("BunnyTrophy");
+					item = ModContent.ItemType<BunnyTrophy>();
 					break;
 				case 3:
-					item = mod.ItemType("TreeTrophy");
+					item = ModContent.ItemType<TreeTrophy>();
 					break;
 			}
 			if (item > 0) {

@@ -101,7 +101,8 @@ namespace Terraria.ModLoader.UI
 					TextPanel.SetText(Language.GetTextValue("tModLoader.MenuModBrowser") + " " + Language.GetTextValue("tModLoader.MBOfflineWithReason", Language.GetTextValue("tModLoader.MBBusy")), 0.8f, true);
 					return;
 				}
-				TextPanel.SetText(Language.GetTextValue("tModLoader.MenuModBrowser") + " " + Language.GetTextValue("tModLoader.MBOfflineWithReason", ""), 0.8f, true);
+				string text = Language.GetTextValue("tModLoader.MenuModBrowser") + " " + Language.GetTextValue("tModLoader.MBOfflineWithReason", Language.GetTextValue("tModLoader.MBUnknown"));
+				TextPanel.SetText(text, 0.8f, true);
 				return;
 			}
 			catch (Exception e) {
@@ -109,7 +110,13 @@ namespace Terraria.ModLoader.UI
 				return;
 			}
 			try {
-				var a = JArray.Parse(response);
+				JArray a;
+				try {
+					a = JArray.Parse(response);
+				}
+				catch (Exception e) {
+					throw new Exception($"Manage Published Error Response: {response}", e);
+				}
 
 				foreach (JObject o in a.Children<JObject>()) {
 					var modItem = new UIModManageItem(

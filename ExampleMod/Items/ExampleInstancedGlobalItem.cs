@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -62,11 +61,11 @@ namespace ExampleMod.Items
 				}*/
 			}
 			if (examplePersonFreeGift) {
-				tooltips.Add(new TooltipLine(mod, "FreeGift", "This is a free gift from ExampleServerConfig") {
+				tooltips.Add(new TooltipLine(mod, "FreeGift", "This is a free gift from ExampleConfigServer") {
 					overrideColor = Color.Magenta
 				});
 			}
-			if (ExampleMod.exampleClientConfig.ShowModOriginTooltip)
+			if (ModContent.GetInstance<ExampleConfigClient>().ShowModOriginTooltip)
 			{
 				foreach (TooltipLine line3 in tooltips)
 				{

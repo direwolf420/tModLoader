@@ -52,13 +52,14 @@ namespace Terraria.ModLoader.IO
 			return tag;
 		}
 
-		public static void Load(Item item, TagCompound tag) {
-			if (tag.Count == 0) {
+		public static void Load(Item item, TagCompound tag)
+		{
+			string modName = tag.GetString("mod");
+			if (modName == "") {
 				item.netDefaults(0);
 				return;
 			}
 
-			string modName = tag.GetString("mod");
 			if (modName == "Terraria") {
 				item.netDefaults(tag.GetInt("id"));
 				if (tag.ContainsKey("legacyData"))
@@ -74,7 +75,7 @@ namespace Terraria.ModLoader.IO
 						item.modItem.Load(tag.GetCompound("data"));
 				}
 				else {
-					item.netDefaults(ModLoader.GetMod("ModLoader").ItemType("MysteryItem"));
+					item.netDefaults(ModContent.ItemType<MysteryItem>());
 					((MysteryItem)item.modItem).Setup(tag);
 				}
 			}
@@ -134,7 +135,7 @@ namespace Terraria.ModLoader.IO
 					}
 				}
 				else {
-					item.GetGlobalItem<MysteryGlobalItem>(ModLoader.GetMod("ModLoader")).data.Add(tag);
+					item.GetGlobalItem<MysteryGlobalItem>().data.Add(tag);
 				}
 			}
 		}
@@ -173,7 +174,11 @@ namespace Terraria.ModLoader.IO
 			try {
 				reader.SafeRead(r => item.modItem?.NetRecieve(r));
 			}
-			catch (IOException) {
+			catch (IOException e) {
+				if (FrameworkVersion.Framework == Framework.Mono) {
+					Logging.tML.Error(e);
+				}
+
 				Logging.tML.Error($"Above IOException error caused by {item.modItem.Name} from the {item.modItem.mod.Name} mod.");
 			}
 
@@ -181,7 +186,11 @@ namespace Terraria.ModLoader.IO
 				try {
 					reader.SafeRead(r => globalItem.Instance(item).NetReceive(item, r));
 				}
-				catch (IOException) {
+				catch (IOException e) {
+					if (FrameworkVersion.Framework == Framework.Mono) {
+						Logging.tML.Error(e);
+					}
+
 					Logging.tML.Error($"Above IOException error caused by {globalItem.Name} from the {globalItem.mod.Name} mod while reading {item.Name}.");
 				}
 			}
@@ -207,7 +216,7 @@ namespace Terraria.ModLoader.IO
 					LoadLegacyModData(item, data, hasGlobalSaving);
 				}
 				else {
-					item.netDefaults(ModLoader.GetMod("ModLoader").ItemType("MysteryItem"));
+					item.netDefaults(ModContent.ItemType<MysteryItem>());
 					var tag = new TagCompound {
 						["mod"] = modName,
 						["name"] = itemName,

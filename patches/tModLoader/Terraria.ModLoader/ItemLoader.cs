@@ -120,6 +120,7 @@ namespace Terraria.ModLoader
 			Array.Resize(ref ItemID.Sets.LockOnAimAbove, nextItem);
 			Array.Resize(ref ItemID.Sets.LockOnAimCompensation, nextItem);
 			Array.Resize(ref ItemID.Sets.SingleUseInGamepad, nextItem);
+			Array.Resize(ref ItemID.Sets.ItemsThatCountAsBombsForDemolitionistToSpawn, nextItem);
 			ItemID.Sets.IsAMaterial = new bool[nextItem]; // clears it, which is desired.
 			for (int k = ItemID.Count; k < nextItem; k++) {
 				Lang._itemNameCache[k] = LocalizedText.Empty;
@@ -249,14 +250,51 @@ namespace Terraria.ModLoader
 		public static int ChoosePrefix(Item item, UnifiedRandom rand) {
 			foreach (var g in HookChoosePrefix.arr) {
 				int pre = g.Instance(item).ChoosePrefix(item, rand);
-				if (pre >= 0) {
+				if (pre > 0) {
 					return pre;
 				}
 			}
 			if (item.modItem != null) {
-				return item.modItem.ChoosePrefix(rand);
+				int pre = item.modItem.ChoosePrefix(rand);
+				if (pre > 0) {
+					return pre;
+				}
 			}
 			return -1;
+		}
+
+		private static HookList HookPrefixChance = AddHook<Func<Item, int, UnifiedRandom, bool?>>(g => g.PrefixChance);
+
+		/// <summary>
+		/// Allows for blocking, forcing and altering chance of prefix rolling.
+		/// False (block) takes precedence over True (force).
+		/// Null gives vanilla behaviour
+		/// </summary>
+		public static bool? PrefixChance(Item item, int pre, UnifiedRandom rand) {
+			bool? result = null;
+			foreach (var g in HookPrefixChance.arr) {
+				bool? r = g.Instance(item).PrefixChance(item, pre, rand);
+				if (r.HasValue)
+					result = r.Value && (result ?? true);
+			}
+			if (item.modItem != null) {
+				bool? r = item.modItem.PrefixChance(pre, rand);
+				if (r.HasValue)
+					result = r.Value && (result ?? true);
+			}
+			return result;
+		}
+
+		private static HookList HookAllowPrefix = AddHook<Func<Item, int, bool>>(g => g.AllowPrefix);
+		public static bool AllowPrefix(Item item, int pre) {
+			bool result = true;
+			foreach (var g in HookAllowPrefix.arr) {
+				result &= g.Instance(item).AllowPrefix(item, pre);
+			}
+			if (item.modItem != null) {
+				result &= item.modItem.AllowPrefix(pre);
+			}
+			return result;
 		}
 
 		private static HookList HookCanUseItem = AddHook<Func<Item, Player, bool>>(g => g.CanUseItem);
@@ -576,14 +614,17 @@ namespace Terraria.ModLoader
 		/// <param name="knockBack">The projectile knock back.</param>
 		/// <returns></returns>
 		public static bool Shoot(Item item, Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack) {
-			foreach (var g in HookShoot.arr)
-				if (!g.Instance(item).Shoot(item, player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack))
-					return false;
+			bool result = true;
 
-			if (item.modItem != null && !item.modItem.Shoot(player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack))
-				return false;
+			foreach (var g in HookShoot.arr) {
+				result &= g.Instance(item).Shoot(item, player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack);
+			}
 
-			return true;
+			if (result && item.modItem != null) {
+				return item.modItem.Shoot(player, ref position, ref speedX, ref speedY, ref type, ref damage, ref knockBack);
+			}
+
+			return result;
 		}
 
 		private delegate void DelegateUseItemHitbox(Item item, Player player, ref Rectangle hitbox, ref bool noHitbox);
@@ -1069,11 +1110,14 @@ namespace Terraria.ModLoader
 		/// Calls each GlobalItem.PreOpenVanillaBag hook until one of them returns false. Returns true if all of them returned true.
 		/// </summary>
 		public static bool PreOpenVanillaBag(string context, Player player, int arg) {
+			bool result = true;
 			foreach (var g in HookPreOpenVanillaBag.arr)
-				if (!g.PreOpenVanillaBag(context, player, arg)) {
-					NPCLoader.blockLoot.Clear(); // clear blockloot
-					return false;
-				}
+				result &= g.PreOpenVanillaBag(context, player, arg);
+
+			if (!result) {
+				NPCLoader.blockLoot.Clear(); // clear blockloot
+				return false;
+			}
 
 			return true;
 		}
@@ -1152,7 +1196,7 @@ namespace Terraria.ModLoader
 			texture?.DrawHair(ref drawHair, ref drawAltHair);
 
 			foreach (var g in HookDrawHair.arr)
-				g.DrawHair(player.body, ref drawHair, ref drawAltHair);
+				g.DrawHair(player.head, ref drawHair, ref drawAltHair);
 		}
 
 		private static HookList HookDrawHead = AddHook<Func<int, bool>>(g => g.DrawHead);
@@ -1184,7 +1228,7 @@ namespace Terraria.ModLoader
 				return false;
 
 			foreach (var g in HookDrawBody.arr)
-				if (!g.DrawBody(player.head))
+				if (!g.DrawBody(player.body))
 					return false;
 
 			return true;
@@ -1341,6 +1385,19 @@ namespace Terraria.ModLoader
 				g.Instance(item).Update(item, ref gravity, ref maxFallSpeed);
 		}
 
+		private static HookList HookCanBurnInLava = AddHook<Func<Item, bool>>(g => g.CanBurnInLava);
+		/// <summary>
+		/// Calls ModItem.CanBurnInLava.
+		/// </summary>
+		public static bool CanBurnInLava(Item item)
+		{
+			foreach (var g in HookCanBurnInLava.arr)
+				if (g.Instance(item).CanBurnInLava(item))
+					return true;
+
+			return item.modItem?.CanBurnInLava() ?? false;
+		}
+		
 		private static HookList HookPostUpdate = AddHook<Action<Item>>(g => g.PostUpdate);
 		/// <summary>
 		/// Calls ModItem.PostUpdate and all GlobalItem.PostUpdate hooks.

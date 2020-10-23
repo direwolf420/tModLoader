@@ -21,7 +21,7 @@ namespace ExampleMod.Tiles
 				//Main.NewText("Accidental Death, score unchanged");
 				return;
 			}
-			int TEScoreBoardType = mod.TileEntityType<TEScoreBoard>();
+			int TEScoreBoardType = ModContent.TileEntityType<TEScoreBoard>();
 			foreach (TileEntity current in TileEntity.ByID.Values) {
 				if (current.type == TEScoreBoardType) {
 					//QuickBox is a neat tool for visualizing things while modding.
@@ -32,7 +32,7 @@ namespace ExampleMod.Tiles
 						int score = 0;
 						// Using HalfVector2 and ReinterpretCast.UIntAsFloat is a way to pack a Vector2 into a single float variable.
 						HalfVector2 halfVector = new HalfVector2((current.Position.X + 1) * 16, (current.Position.Y + 1) * 16);
-						Projectile.NewProjectile(npc.Center, Vector2.Zero, mod.ProjectileType<Projectiles.ScorePoint>(), 0, 0, Main.myPlayer, ReLogic.Utilities.ReinterpretCast.UIntAsFloat(halfVector.PackedValue), npc.lastInteraction);
+						Projectile.NewProjectile(npc.Center, Vector2.Zero, ModContent.ProjectileType<Projectiles.ScorePoint>(), 0, 0, Main.myPlayer, ReLogic.Utilities.ReinterpretCast.UIntAsFloat(halfVector.PackedValue), npc.lastInteraction);
 						scoreboard.scores.TryGetValue(scoringPlayer.name, out score);
 						scoreboard.scores[scoringPlayer.name] = score + 1;
 						if (Main.dedServ) {
@@ -108,14 +108,14 @@ namespace ExampleMod.Tiles
 
 		public override bool ValidTile(int i, int j) {
 			Tile tile = Main.tile[i, j];
-			return tile.active() && tile.type == mod.TileType<ScoreBoard>() && tile.frameX == 0 && tile.frameY == 0;
+			return tile.active() && tile.type == ModContent.TileType<ScoreBoard>() && tile.frameX == 0 && tile.frameY == 0;
 		}
 
 		public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction) {
 			//Main.NewText("i " + i + " j " + j + " t " + type + " s " + style + " d " + direction);
-			if (Main.netMode == 1) {
+			if (Main.netMode == NetmodeID.MultiplayerClient) {
 				NetMessage.SendTileSquare(Main.myPlayer, i, j, 3);
-				NetMessage.SendData(87, -1, -1, null, i, j, Type, 0f, 0, 0, 0);
+				NetMessage.SendData(MessageID.TileEntityPlacement, -1, -1, null, i, j, Type, 0f, 0, 0, 0);
 				return -1;
 			}
 			return Place(i, j);
@@ -128,10 +128,11 @@ namespace ExampleMod.Tiles
 		public override void SetDefaults() {
 			Main.tileFrameImportant[Type] = true;
 			Main.tileLavaDeath[Type] = true;
+			TileID.Sets.FramesOnKillWall[Type] = true; // Necessary since we have a placement that uses AnchorWall
 
 			TileObjectData.newTile.CopyFrom(TileObjectData.Style2x2);
 			// We set processedCoordinates to true so our Hook_AfterPlacement gets top left coordinates, regardless of Origin.
-			TileObjectData.newTile.HookPostPlaceMyPlayer = new PlacementHook(mod.GetTileEntity<TEScoreBoard>().Hook_AfterPlacement, -1, 0, true);
+			TileObjectData.newTile.HookPostPlaceMyPlayer = new PlacementHook(ModContent.GetInstance<TEScoreBoard>().Hook_AfterPlacement, -1, 0, true);
 			TileObjectData.newTile.StyleHorizontal = true;
 			TileObjectData.newTile.StyleMultiplier = 5;
 			TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
@@ -166,24 +167,25 @@ namespace ExampleMod.Tiles
 		}
 
 		public override void KillMultiTile(int i, int j, int frameX, int frameY) {
-			Item.NewItem(i * 16, j * 16, 32, 48, mod.ItemType<Items.Placeable.ScoreBoard>());
-			mod.GetTileEntity<TEScoreBoard>().Kill(i, j);
+			Item.NewItem(i * 16, j * 16, 32, 48, ModContent.ItemType<Items.Placeable.ScoreBoard>());
+			ModContent.GetInstance<TEScoreBoard>().Kill(i, j);
 		}
 
-		public override void RightClick(int i, int j) {
+		public override bool NewRightClick(int i, int j) {
 			Tile tile = Main.tile[i, j];
-			int left = i - tile.frameX / 18;
+			int left = i - tile.frameX % 36 / 18;
 			int top = j - tile.frameY / 18;
 
-			int index = mod.GetTileEntity<TEScoreBoard>().Find(left, top);
+			int index = ModContent.GetInstance<TEScoreBoard>().Find(left, top);
 			if (index == -1) {
-				return;
+				return false;
 			}
 			Main.NewText("Scores:");
 			TEScoreBoard tEScoreBoard = (TEScoreBoard)TileEntity.ByID[index];
 			foreach (var item in tEScoreBoard.scores) {
 				Main.NewText(item.Key + ": " + item.Value);
 			}
+			return true;
 		}
 
 		public override void MouseOver(int i, int j) {

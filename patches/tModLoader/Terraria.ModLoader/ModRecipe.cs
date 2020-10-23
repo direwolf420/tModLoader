@@ -26,6 +26,8 @@ namespace Terraria.ModLoader
 		/// </summary>
 		/// <param name="mod">The mod the recipe originates from.</param>
 		public ModRecipe(Mod mod) {
+			if (!RecipeHooks.setupRecipes)
+				throw new RecipeException("A ModRecipe can only be created inside recipe related methods");
 			this.mod = mod;
 		}
 
@@ -74,6 +76,8 @@ namespace Terraria.ModLoader
 		/// <param name="itemID">The item identifier.</param>
 		/// <param name="stack">The stack.</param>
 		public void AddIngredient(int itemID, int stack = 1) {
+			if (numIngredients == 14)
+				throw new RecipeException("Recipe already has maximum number of ingredients. 14 is the max.");
 			this.requiredItem[numIngredients].SetDefaults(itemID, false);
 			this.requiredItem[numIngredients].stack = stack;
 			numIngredients++;
@@ -125,11 +129,29 @@ namespace Terraria.ModLoader
 		}
 
 		/// <summary>
+		/// Adds a recipe group ingredient to this recipe with the given RecipeGroupID and stack size. Vanilla recipe group IDs can be found in Terraria.ID.RecipeGroupID and modded recipe group IDs will be returned from RecipeGroup.RegisterGroup.
+		/// </summary>
+		/// <param name="recipeGroupID">The RecipeGroupID.</param>
+		/// <param name="stack">The stack.</param>
+		/// <exception cref="RecipeException">A recipe group with the ID " + recipeGroupID + " does not exist.</exception>
+		public void AddRecipeGroup(int recipeGroupID, int stack = 1)
+		{
+			if (!RecipeGroup.recipeGroups.ContainsKey(recipeGroupID)) {
+				throw new RecipeException("A recipe group with the ID " + recipeGroupID + " does not exist.");
+			}
+			RecipeGroup rec = RecipeGroup.recipeGroups[recipeGroupID];
+			AddIngredient(rec.ValidItems[rec.IconicItemIndex], stack);
+			acceptedGroups.Add(recipeGroupID);
+		}
+
+		/// <summary>
 		/// Adds a required crafting station with the given tile type to this recipe. Ex: <c>recipe.AddTile(TileID.WorkBenches)</c>
 		/// </summary>
 		/// <param name="tileID">The tile identifier.</param>
 		/// <exception cref="RecipeException">No tile has ID " + tileID</exception>
 		public void AddTile(int tileID) {
+			if (numTiles == 14)
+				throw new RecipeException("Recipe already has maximum number of tiles. 14 is the max.");
 			if (tileID < 0 || tileID >= TileLoader.TileCount) {
 				throw new RecipeException("No tile has ID " + tileID);
 			}
@@ -201,7 +223,7 @@ namespace Terraria.ModLoader
 				throw new RecipeException("A recipe without any result has been added.");
 			}
 			if (this.numIngredients > 14 || this.numTiles > 14) {
-				throw new RecipeException("A recipe with either too many tiles or too many ingredients has been added. 14 is the max.");
+				throw new RecipeException("A recipe with either too many tiles or too many ingredients has been added. 14 is the maximum amount.");
 			}
 			for (int k = 0; k < Recipe.maxRequirements; k++) {
 				if (this.requiredTile[k] == TileID.Bottles) {

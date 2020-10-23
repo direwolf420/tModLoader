@@ -1,3 +1,4 @@
+using ExampleMod.Dusts;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -11,10 +12,10 @@ namespace ExampleMod.Tiles
 			Main.tileMergeDirt[Type] = true;
 			Main.tileBlockLight[Type] = true;
 			Main.tileLighted[Type] = true;
-			dustType = mod.DustType("Sparkle");
-			drop = mod.ItemType("ExampleBlock");
+			dustType = ModContent.DustType<Sparkle>();
+			drop = ModContent.ItemType<Items.Placeable.ExampleBlock>();
 			AddMapEntry(new Color(200, 200, 200));
-			SetModTree(new ExampleTree());
+			SetModTree(new Trees.ExampleTree());
 		}
 
 		public override void NumDust(int i, int j, bool fail, ref int num) {
@@ -33,7 +34,7 @@ namespace ExampleMod.Tiles
 
 		public override int SaplingGrowthType(ref int style) {
 			style = 0;
-			return mod.TileType("ExampleSapling");
+			return ModContent.TileType<ExampleSapling>();
 		}
 	}
 }

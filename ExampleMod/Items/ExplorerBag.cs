@@ -14,7 +14,7 @@ namespace ExampleMod.Items
 		public override void SetDefaults() {
 			item.width = 20;
 			item.height = 20;
-			item.rare = 2;
+			item.rare = ItemRarityID.Green;
 		}
 
 		public override bool CanRightClick() {
@@ -34,7 +34,7 @@ namespace ExampleMod.Items
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 10);
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 10);
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

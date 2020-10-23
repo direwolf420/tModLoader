@@ -60,7 +60,7 @@ namespace ExampleMod.Projectiles.PuritySpirit
 				}
 			}
 			projectile.timeLeft = 2;
-			if (!npc.active || npc.type != mod.NPCType("PuritySpirit")) {
+			if (!npc.active || npc.type != ModContent.NPCType<NPCs.PuritySpirit.PuritySpirit>()) {
 				projectile.Kill();
 			}
 		}

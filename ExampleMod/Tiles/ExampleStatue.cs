@@ -28,7 +28,7 @@ namespace ExampleMod.Tiles
 		}
 
 		public override void KillMultiTile(int i, int j, int frameX, int frameY) {
-			Item.NewItem(i * 16, j * 16, 32, 48, mod.ItemType<ExampleStatueItem>());
+			Item.NewItem(i * 16, j * 16, 32, 48, ModContent.ItemType<ExampleStatueItem>());
 		}
 
 		public override void HitWire(int i, int j) {
@@ -47,9 +47,10 @@ namespace ExampleMod.Tiles
 			int spawnX = x * 16 + 16;
 			int spawnY = (y + 3) * 16;
 
-			if (Main.rand.NextFloat() < .95f) // this is 95% chance for item spawn, 5% chance for npc spawn
+			// This example shows both item spawning code and npc spawning code, you can use whichever code suits your mod
+			if (Main.rand.NextFloat() < .95f) // There is a 95% chance for item spawn and a 5% chance for npc spawn
 			{
-				// If you want to make a NPC spawning statue, see below.
+				// If you want to make a item spawning statue, see below.
 				if (Wiring.CheckMech(x, y, 60) && Item.MechSpawn(spawnX, spawnY, ItemID.SilverCoin) && Item.MechSpawn(spawnX, spawnY, ItemID.GoldCoin) && Item.MechSpawn(spawnX, spawnY, ItemID.PlatinumCoin)) {
 					int id = ItemID.SilverCoin;
 					if (Main.rand.NextBool(100)) {
@@ -62,7 +63,7 @@ namespace ExampleMod.Tiles
 				}
 			}
 			else {
-				// If you want to make a NPC spawning statue, see below.
+				// If you want to make an NPC spawning statue, see below.
 				int npcIndex = -1;
 				// 30 is the time before it can be used again. NPC.MechSpawn checks nearby for other spawns to prevent too many spawns. 3 in immediate vicinity, 6 nearby, 10 in world.
 				if (Wiring.CheckMech(x, y, 30) && NPC.MechSpawn((float)spawnX, (float)spawnY, NPCID.Goldfish)) {
@@ -87,7 +88,7 @@ namespace ExampleMod.Tiles
 
 		public override void SetDefaults() {
 			item.CloneDefaults(ItemID.ArmorStatue);
-			item.createTile = mod.TileType<ExampleStatue>();
+			item.createTile = ModContent.TileType<ExampleStatue>();
 			item.placeStyle = 0;
 		}
 	}
@@ -101,13 +102,13 @@ namespace ExampleMod.Tiles
 					progress.Message = "Adding ExampleMod Statue";
 
 					// Not necessary, just a precaution.
-					if (WorldGen.statueList.Any(point => point.X == mod.TileType<ExampleStatue>())) {
+					if (WorldGen.statueList.Any(point => point.X == ModContent.TileType<ExampleStatue>())) {
 						return;
 					}
 					// Make space in the statueList array, and then add a Point16 of (TileID, PlaceStyle)
 					Array.Resize(ref WorldGen.statueList, WorldGen.statueList.Length + 1);
 					for (int i = WorldGen.statueList.Length - 1; i < WorldGen.statueList.Length; i++) {
-						WorldGen.statueList[i] = new Point16(mod.TileType<ExampleStatue>(), 0);
+						WorldGen.statueList[i] = new Point16(ModContent.TileType<ExampleStatue>(), 0);
 						// Do this if you want the statue to spawn with wire and pressure plate
 						// WorldGen.StatuesWithTraps.Add(i);
 					}

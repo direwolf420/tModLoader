@@ -210,7 +210,7 @@ namespace Terraria.ModLoader
 		}
 
 		/// <summary>
-		/// Allows you to modify the damage, knockback, etc., that a projectile does to an NPC.
+		/// Allows you to modify the damage, knockback, etc., that a projectile does to an NPC. This method is only called for the owner of the projectile, meaning that in multi-player, projectiles owned by a player call this method on that client, and projectiles owned by the server such as enemy projectiles call this method on the server.
 		/// </summary>
 		/// <param name="projectile"></param>
 		/// <param name="target"></param>
@@ -222,7 +222,7 @@ namespace Terraria.ModLoader
 		}
 
 		/// <summary>
-		/// Allows you to create special effects when a projectile hits an NPC (for example, inflicting debuffs).
+		/// Allows you to create special effects when a projectile hits an NPC (for example, inflicting debuffs). This method is only called for the owner of the projectile, meaning that in multi-player, projectiles owned by a player call this method on that client, and projectiles owned by the server such as enemy projectiles call this method on the server.
 		/// </summary>
 		/// <param name="projectile"></param>
 		/// <param name="target"></param>
@@ -391,6 +391,12 @@ namespace Terraria.ModLoader
 		/// The speed at which the grapple pulls the player after hitting something. Defaults to 11, but the Bat Hook uses 16.
 		/// </summary>
 		public virtual void GrapplePullSpeed(Projectile projectile, Player player, ref float speed) {
+		}
+
+		/// <summary>
+		/// The location that the grappling hook pulls the player to. Defaults to the center of the hook projectile.
+		/// </summary>
+		public virtual void GrappleTargetPoint(Projectile projectile, Player player, ref float grappleX, ref float grappleY) {
 		}
 	}
 }

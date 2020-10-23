@@ -26,6 +26,8 @@ namespace Terraria.ModLoader.UI.ModBrowser
 	internal partial class UIModBrowser : UIState
 	{
 		public static bool AvoidGithub;
+		public static bool AvoidImgur;
+		public static bool EarlyAutoUpdate;
 		public static bool PlatformSupportsTls12
 			=> FrameworkVersion.Framework != Framework.Mono || FrameworkVersion.Version >= new Version(5, 20);
 
@@ -33,8 +35,8 @@ namespace Terraria.ModLoader.UI.ModBrowser
 
 		// TODO maybe we can refactor this as a "BrowserState" enum
 		public bool Loading;
-		public bool aModUpdated;
-		public bool anEnabledModDownloaded;
+		public bool anEnabledModUpdated;
+		public bool aDisabledModUpdated;
 		public bool aNewModDownloaded;
 
 		private bool _updateAvailable;
@@ -157,26 +159,33 @@ namespace Terraria.ModLoader.UI.ModBrowser
 			Main.PlaySound(SoundID.MenuClose);
 			Main.menuMode = 0;
 
-			bool reloadModsNeeded = (aModUpdated || aNewModDownloaded) && ModLoader.autoReloadAndEnableModsLeavingModBrowser || anEnabledModDownloaded;
-			bool reloadModsReminder = aModUpdated && !ModLoader.dontRemindModBrowserUpdateReload;
+			bool reloadModsNeeded = aNewModDownloaded && ModLoader.autoReloadAndEnableModsLeavingModBrowser || anEnabledModUpdated;
 			bool enableModsReminder = aNewModDownloaded && !ModLoader.dontRemindModBrowserDownloadEnable;
+			bool reloadModsReminder = aDisabledModUpdated && !ModLoader.dontRemindModBrowserUpdateReload;
 
 			if (reloadModsNeeded) {
 				Main.menuMode = Interface.reloadModsID;
 			}
-			else if (reloadModsReminder || enableModsReminder) {
-				string text = Language.GetTextValue(reloadModsReminder ? "tModLoader.ReloadModsReminder" : "tModLoader.EnableModsReminder");
+			else if (enableModsReminder || reloadModsReminder) {
+				string text = "";
+				if(enableModsReminder)
+					text += Language.GetTextValue("tModLoader.EnableModsReminder") + "\n\n";
+				if (reloadModsReminder)
+					text += Language.GetTextValue("tModLoader.ReloadModsReminder");
 				Interface.infoMessage.Show(text,
 					0, null, Language.GetTextValue("tModLoader.DontShowAgain"),
 					() => {
-						ModLoader.dontRemindModBrowserUpdateReload = true;
+						if(enableModsReminder)
+							ModLoader.dontRemindModBrowserDownloadEnable = true;
+						if (reloadModsReminder)
+							ModLoader.dontRemindModBrowserUpdateReload = true;
 						Main.SaveSettings();
 					});
 			}
 
-			aModUpdated = false;
+			anEnabledModUpdated = false;
 			aNewModDownloaded = false;
-			anEnabledModDownloaded = false;
+			aDisabledModUpdated = false;
 		}
 
 		private void ReloadList(UIMouseEvent evt, UIElement listeningElement) {
@@ -233,7 +242,8 @@ namespace Terraria.ModLoader.UI.ModBrowser
 					var values = new NameValueCollection {
 						{"modloaderversion", ModLoader.versionedName},
 						{"platform", ModLoader.CompressedPlatformRepresentation},
-						{"netversion", FrameworkVersion.Version.ToString()}
+						{"netversion", FrameworkVersion.Version.ToString()},
+						{"EarlyAutoUpdate", EarlyAutoUpdate.ToString()}
 					};
 					using (var client = new WebClient()) {
 						ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, policyErrors) => { return true; };
@@ -305,7 +315,7 @@ namespace Terraria.ModLoader.UI.ModBrowser
 				}
 
 				var updateObject = (JObject)jsonObject["update"];
-				if (updateObject != null) {
+				if (updateObject != null && !Engine.Steam.IsSteamApp) {
 					_updateAvailable = true;
 					_updateText = (string)updateObject["message"];
 					_updateUrl = (string)updateObject["url"];

@@ -98,9 +98,27 @@ namespace Terraria.ModLoader
 		/// Allows you to manually choose what prefix an item will get.
 		/// </summary>
 		/// <returns>The ID of the prefix to give the item, -1 to use default vanilla behavior</returns>
-		public virtual int ChoosePrefix(Item item, UnifiedRandom rand) {
-			return -1;
-		}
+		public virtual int ChoosePrefix(Item item, UnifiedRandom rand) => -1;
+
+		/// <summary>
+		/// To prevent putting the item in the tinkerer slot, return false when pre is -3.
+		/// To prevent rolling of a prefix on spawn, return false when pre is -1.
+		/// To force rolling of a prefix on spawn, return true when pre is -1.
+		/// 
+		/// To reduce the probability of a prefix on spawn (pre == -1) to X%, return false 100-4X % of the time.
+		/// To increase the probability of a prefix on spawn (pre == -1) to X%, return true (4X-100)/3 % of the time.
+		/// 
+		/// To delete a prefix from an item when the item is loaded, return false when pre is the prefix you want to delete.
+		/// Use AllowPrefix to prevent rolling of a certain prefix.
+		/// </summary>
+		/// <param name="pre">The prefix being applied to the item, or the roll mode. -1 is when the item is naturally generated in a chest, crafted, purchased from an NPC, looted from a grab bag (excluding presents), or dropped by a slain enemy (if it's spawned with prefixGiven: -1). -2 is when the item is rolled in the tinkerer. -3 determines if the item can be placed in the tinkerer slot.</param>
+		/// <returns></returns>
+		public virtual bool? PrefixChance(Item item, int pre, UnifiedRandom rand) => null;
+
+		/// <summary>
+		/// Force a re-roll of a prefix by returning false.
+		/// </summary>
+		public virtual bool AllowPrefix(Item item, int pre) => true;
 
 		/// <summary>
 		/// Returns whether or not any item can be used. Returns true by default. The inability to use a specific item overrides this, so use this to stop an item from being used.
@@ -130,7 +148,7 @@ namespace Terraria.ModLoader
 		/// <summary>
 		/// Allows you to change the effective useTime of an item.
 		/// </summary>
-		/// <returns>The multiplier on the usage speed. 1f by default.</returns>
+		/// <returns>The multiplier on the usage speed. 1f by default. Values greater than 1 increase the item speed.</returns>
 		public virtual float UseTimeMultiplier(Item item, Player player) {
 			return 1f;
 		}
@@ -138,7 +156,7 @@ namespace Terraria.ModLoader
 		/// <summary>
 		/// Allows you to change the effective useAnimation of an item.
 		/// </summary>
-		/// <returns>The multiplier on the animation speed. 1f by default.</returns>
+		/// <returns>The multiplier on the animation speed. 1f by default. Values greater than 1 increase the item speed.</returns>
 		public virtual float MeleeSpeedMultiplier(Item item, Player player) {
 			return 1f;
 		}
@@ -223,7 +241,7 @@ namespace Terraria.ModLoader
 		/// </summary>
 		/// <param name="item">The item being used</param>
 		/// <param name="player">The player using the item</param>
-		/// <param name="add">Used for additively stacking buffs (most common). Only ever use += on this field. Things with effects like "5% increased MyDamageClass damage" would use this: `add += 0.05`</param>
+		/// <param name="add">Used for additively stacking buffs (most common). Only ever use += on this field. Things with effects like "5% increased MyDamageClass damage" would use this: `add += 0.05f`</param>
 		/// <param name="mult">Use to directly multiply the player's effective damage. Good for debuffs, or things which should stack separately (eg ammo type buffs)</param>
 		/// <param name="flat">This is a flat damage bonus that will be added after add and mult are applied. It facilitates effects like "4 more damage from weapons"</param>
 		public virtual void ModifyWeaponDamage(Item item, Player player, ref float add, ref float mult, ref float flat) {
@@ -571,7 +589,7 @@ namespace Terraria.ModLoader
 		/// <summary>
 		/// Allows you to determine whether the skin/shirt on the player's arms and hands are drawn when a body armor is worn.
 		/// Note that if drawHands is false, the arms will not be drawn either.
-		/// 
+		/// "body" is the player's associated body equipment texture.
 		/// This method is not instanced.
 		/// </summary>
 		public virtual void DrawHands(int body, ref bool drawHands, ref bool drawArms) {
@@ -579,7 +597,7 @@ namespace Terraria.ModLoader
 
 		/// <summary>
 		/// Allows you to determine whether the player's hair or alt (hat) hair will be drawn when a head armor is worn.
-		/// 
+		/// "head" is the player's associated head equipment texture.
 		/// This method is not instanced.
 		/// </summary>
 		public virtual void DrawHair(int head, ref bool drawHair, ref bool drawAltHair) {
@@ -587,7 +605,7 @@ namespace Terraria.ModLoader
 
 		/// <summary>
 		/// Return false to hide the player's head when a head armor is worn. Returns true by default.
-		/// 
+		/// "head" is the player's associated head equipment texture.
 		/// This method is not instanced.
 		/// </summary>
 		public virtual bool DrawHead(int head) {
@@ -596,7 +614,7 @@ namespace Terraria.ModLoader
 
 		/// <summary>
 		/// Return false to hide the player's body when a body armor is worn. Returns true by default.
-		/// 
+		/// "body" is the player's associated body equipment texture.
 		/// This method is not instanced.
 		/// </summary>
 		public virtual bool DrawBody(int body) {
@@ -605,7 +623,7 @@ namespace Terraria.ModLoader
 
 		/// <summary>
 		/// Return false to hide the player's legs when a leg armor or shoe accessory is worn. Returns true by default.
-		/// 
+		/// "legs" and "shoes" are the player's associated legs and shoes equipment textures.
 		/// This method is not instanced.
 		/// </summary>
 		public virtual bool DrawLegs(int legs, int shoes) {
@@ -658,6 +676,13 @@ namespace Terraria.ModLoader
 		/// Allows you to customize an item's movement when lying in the world. Note that this will not be called if the item is currently being grabbed by a player.
 		/// </summary>
 		public virtual void Update(Item item, ref float gravity, ref float maxFallSpeed) {
+		}
+
+		/// <summary>
+		/// Returns whether or not this item burns when it is thrown into lava despite item.rare not being 0. Returns false by default.
+		/// </summary>
+		public virtual bool CanBurnInLava(Item item) {
+			return false;
 		}
 
 		/// <summary>

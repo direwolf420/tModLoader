@@ -1,3 +1,5 @@
+using ExampleMod.Mounts;
+using ExampleMod.Tiles;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -14,18 +16,18 @@ namespace ExampleMod.Items
 			item.height = 30;
 			item.useTime = 20;
 			item.useAnimation = 20;
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.value = 30000;
-			item.rare = 2;
+			item.rare = ItemRarityID.Green;
 			item.UseSound = SoundID.Item79;
 			item.noMelee = true;
-			item.mountType = mod.MountType("Car");
+			item.mountType = ModContent.MountType<Car>();
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 10);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 10);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

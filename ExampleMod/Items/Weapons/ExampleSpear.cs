@@ -13,7 +13,7 @@ namespace ExampleMod.Items.Weapons
 
 		public override void SetDefaults() {
 			item.damage = 40;
-			item.useStyle = 5;
+			item.useStyle = ItemUseStyleID.HoldingOut;
 			item.useAnimation = 18;
 			item.useTime = 24;
 			item.shootSpeed = 3.7f;
@@ -21,7 +21,7 @@ namespace ExampleMod.Items.Weapons
 			item.width = 32;
 			item.height = 32;
 			item.scale = 1f;
-			item.rare = 5;
+			item.rare = ItemRarityID.Pink;
 			item.value = Item.sellPrice(silver: 10);
 
 			item.melee = true;
@@ -30,7 +30,7 @@ namespace ExampleMod.Items.Weapons
 			item.autoReuse = true; // Most spears don't autoReuse, but it's possible when used in conjunction with CanUseItem()
 
 			item.UseSound = SoundID.Item1;
-			item.shoot = mod.ProjectileType<ExampleSpearProjectile>();
+			item.shoot = ModContent.ProjectileType<ExampleSpearProjectile>();
 		}
 
 		public override bool CanUseItem(Player player) {

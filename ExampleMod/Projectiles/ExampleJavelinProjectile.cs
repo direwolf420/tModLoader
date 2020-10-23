@@ -1,4 +1,5 @@
-﻿using ExampleMod.Items.Weapons;
+﻿using ExampleMod.Dusts;
+using ExampleMod.Items.Weapons;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
@@ -16,7 +17,6 @@ namespace ExampleMod.Projectiles
 		public override void SetDefaults() {
 			projectile.width = 16;
 			projectile.height = 16;
-			projectile.aiStyle = -1;
 			projectile.friendly = true;
 			projectile.melee = true;
 			projectile.penetrate = 3;
@@ -60,7 +60,7 @@ namespace ExampleMod.Projectiles
 		}
 
 		public override void Kill(int timeLeft) {
-			Main.PlaySound(0, (int)projectile.position.X, (int)projectile.position.Y); // Play a death sound
+			Main.PlaySound(SoundID.Dig, (int)projectile.position.X, (int)projectile.position.Y); // Play a death sound
 			Vector2 usePos = projectile.position; // Position to use for dusts
 			
 			// Please note the usage of MathHelper, please use this!
@@ -90,12 +90,12 @@ namespace ExampleMod.Projectiles
 				// Drop a javelin item, 1 in 18 chance (~5.5% chance)
 				int item =
 				Main.rand.NextBool(18)
-					? Item.NewItem(projectile.getRect(), mod.ItemType<ExampleJavelin>())
+					? Item.NewItem(projectile.getRect(), ModContent.ItemType<ExampleJavelin>())
 					: 0;
 
 				// Sync the drop for multiplayer
 				// Note the usage of Terraria.ID.MessageID, please use this!
-				if (Main.netMode == 1 && item >= 0) {
+				if (Main.netMode == NetmodeID.MultiplayerClient && item >= 0) {
 					NetMessage.SendData(MessageID.SyncItem, -1, -1, null, item, 1f);
 				}
 			}
@@ -130,7 +130,7 @@ namespace ExampleMod.Projectiles
 				(target.Center - projectile.Center) *
 				0.75f; // Change velocity based on delta center of targets (difference between entity centers)
 			projectile.netUpdate = true; // netUpdate this javelin
-			target.AddBuff(mod.BuffType<Buffs.ExampleJavelin>(), 900); // Adds the ExampleJavelin debuff for a very small DoT
+			target.AddBuff(ModContent.BuffType<Buffs.ExampleJavelin>(), 900); // Adds the ExampleJavelin debuff for a very small DoT
 
 			projectile.damage = 0; // Makes sure the sticking javelins do not deal damage anymore
 
@@ -217,8 +217,8 @@ namespace ExampleMod.Projectiles
 				const float velXmult = 0.98f; // x velocity factor, every AI update the x velocity will be 98% of the original speed
 				const float velYmult = 0.35f; // y velocity factor, every AI update the y velocity will be be 0.35f bigger of the original speed, causing the javelin to drop to the ground
 				TargetWhoAmI = MAX_TICKS; // set ai1 to maxTicks continuously
-				projectile.velocity.X = projectile.velocity.X * velXmult;
-				projectile.velocity.Y = projectile.velocity.Y + velYmult;
+				projectile.velocity.X *= velXmult;
+				projectile.velocity.Y += velYmult;
 			}
 
 			// Make sure to set the rotation accordingly to the velocity, and add some to work around the sprite's rotation
@@ -229,13 +229,13 @@ namespace ExampleMod.Projectiles
 
 			// Spawn some random dusts as the javelin travels
 			if (Main.rand.NextBool(3)) {
-				Dust dust = Dust.NewDustDirect(projectile.position, projectile.height, projectile.width, mod.DustType<Dusts.Sparkle>(),
+				Dust dust = Dust.NewDustDirect(projectile.position, projectile.height, projectile.width, ModContent.DustType<Sparkle>(),
 					projectile.velocity.X * .2f, projectile.velocity.Y * .2f, 200, Scale: 1.2f);
 				dust.velocity += projectile.velocity * 0.3f;
 				dust.velocity *= 0.2f;
 			}
 			if (Main.rand.NextBool(4)) {
-				Dust dust = Dust.NewDustDirect(projectile.position, projectile.height, projectile.width, mod.DustType<Dusts.Sparkle>(),
+				Dust dust = Dust.NewDustDirect(projectile.position, projectile.height, projectile.width, ModContent.DustType<Sparkle>(),
 					0, 0, 254, Scale: 0.3f);
 				dust.velocity += projectile.velocity * 0.5f;
 				dust.velocity *= 0.5f;

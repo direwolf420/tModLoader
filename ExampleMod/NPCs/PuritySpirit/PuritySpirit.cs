@@ -1,3 +1,7 @@
+using ExampleMod.Dusts;
+using ExampleMod.Items;
+using ExampleMod.Items.Armor;
+using ExampleMod.Items.Placeable;
 using ExampleMod.Projectiles.PuritySpirit;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -47,7 +51,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 			}
 			music = MusicID.Title;
 			musicPriority = MusicPriority.BossMedium; // By default, musicPriority is BossLow
-			bossBag = mod.ItemType("PuritySpiritBag");
+			bossBag = ModContent.ItemType<PuritySpiritBag>();
 		}
 
 		public override void ScaleExpertStats(int numPlayers, float bossLifeScale) {
@@ -132,11 +136,11 @@ namespace ExampleMod.NPCs.PuritySpirit
 			if (damageTotal < 0) {
 				damageTotal = 0;
 			}
-			if (Main.netMode == 1) {
+			if (Main.netMode == NetmodeID.MultiplayerClient) {
 				return;
 			}
 			if (stage == 2 && difficulty > 0) {
-				Projectile.NewProjectile(npc.Center.X - arenaWidth / 2, npc.Center.Y, NegativeWall.speed, 0f, mod.ProjectileType("NegativeWall"), 0, 0f, Main.myPlayer, npc.whoAmI, arenaHeight);
+				Projectile.NewProjectile(npc.Center.X - arenaWidth / 2, npc.Center.Y, NegativeWall.speed, 0f, ModContent.ProjectileType<NegativeWall>(), 0, 0f, Main.myPlayer, npc.whoAmI, arenaHeight);
 				stage++;
 			}
 			if (stage == 3 && difficulty > 1) {
@@ -144,7 +148,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 				stage++;
 			}
 			if (stage == 4 && difficulty > 2) {
-				Projectile.NewProjectile(npc.Center.X, npc.Center.Y - arenaHeight / 2, 0f, NegativeWall.speed, mod.ProjectileType("NegativeWall"), 0, 0f, Main.myPlayer, npc.whoAmI, -arenaWidth);
+				Projectile.NewProjectile(npc.Center.X, npc.Center.Y - arenaHeight / 2, 0f, NegativeWall.speed, ModContent.ProjectileType<NegativeWall>(), 0, 0f, Main.myPlayer, npc.whoAmI, -arenaWidth);
 				stage++;
 			}
 			if (stage == 5 && difficulty > 3) {
@@ -237,7 +241,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 		}
 
 		public void FindPlayers() {
-			if (Main.netMode != 1) {
+			if (Main.netMode != NetmodeID.MultiplayerClient) {
 				int originalCount = targets.Count;
 				targets.Clear();
 				for (int k = 0; k < 255; k++) {
@@ -245,7 +249,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 						targets.Add(k);
 					}
 				}
-				if (Main.netMode == 2 && targets.Count != originalCount) {
+				if (Main.netMode == NetmodeID.Server && targets.Count != originalCount) {
 					ModPacket netMessage = GetPacket(PuritySpiritMessageType.TargetList);
 					netMessage.Write(targets.Count);
 					foreach (int target in targets) {
@@ -273,7 +277,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 					Player player = Main.player[k];
 					if (player.active && player.position.X > center.X - arenaWidth / 2 && player.position.X + player.width < center.X + arenaWidth / 2 && player.position.Y > center.Y - arenaHeight / 2 && player.position.Y + player.height < center.Y + arenaHeight / 2) {
 						player.GetModPlayer<ExamplePlayer>().heroLives = 3;
-						if (Main.netMode == 2) {
+						if (Main.netMode == NetmodeID.Server) {
 							ModPacket netMessage = GetPacket(PuritySpiritMessageType.HeroPlayer);
 							netMessage.Send(k);
 						}
@@ -298,7 +302,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 				attackProgress = 0;
 				stage++;
 				npc.dontTakeDamage = false;
-				if (Main.netMode == 2) {
+				if (Main.netMode == NetmodeID.Server) {
 					ModPacket netMessage = GetPacket(PuritySpiritMessageType.DontTakeDamage);
 					netMessage.Write(false);
 					netMessage.Send();
@@ -307,7 +311,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 		}
 
 		private void SetupCrystals(int radius, bool clockwise) {
-			if (Main.netMode == 1) {
+			if (Main.netMode == NetmodeID.MultiplayerClient) {
 				return;
 			}
 			Vector2 center = npc.Center;
@@ -318,19 +322,19 @@ namespace ExampleMod.NPCs.PuritySpirit
 				if (Main.expertMode) {
 					damage = (int)(100 / Main.expertDamage);
 				}
-				int proj = Projectile.NewProjectile(pos.X, pos.Y, 0f, 0f, mod.ProjectileType("PureCrystal"), damage, 0f, Main.myPlayer, npc.whoAmI, angle);
+				int proj = Projectile.NewProjectile(pos.X, pos.Y, 0f, 0f, ModContent.ProjectileType<PureCrystal>(), damage, 0f, Main.myPlayer, npc.whoAmI, angle);
 				Main.projectile[proj].localAI[0] = radius;
 				Main.projectile[proj].localAI[1] = clockwise ? 1 : -1;
-				NetMessage.SendData(27, -1, -1, null, proj);
+				NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, proj);
 			}
 		}
 
 		private void UltimateAttack() {
 			if (attackProgress == 0) {
 				PlaySound(15, 0);
-				if (Main.netMode != 1) {
+				if (Main.netMode != NetmodeID.MultiplayerClient) {
 					int damage = Main.expertMode ? 720 : 600;
-					Projectile.NewProjectile(npc.Center.X, npc.Center.Y, 0f, 0f, mod.ProjectileType("VoidWorld"), damage, 0f, Main.myPlayer, npc.whoAmI, Main.rand.Next());
+					Projectile.NewProjectile(npc.Center.X, npc.Center.Y, 0f, 0f, ModContent.ProjectileType<VoidWorld>(), damage, 0f, Main.myPlayer, npc.whoAmI, Main.rand.Next());
 				}
 			}
 			attackProgress++;
@@ -391,7 +395,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 				int damage = Main.expertMode ? 360 : 300;
 				for (int k = 0; k < targets.Count; k++) {
 					float x = Main.player[targets[k]].Center.X;
-					Projectile.NewProjectile(x, y, 0f, 0f, mod.ProjectileType("PurityBeam"), damage, 0f, Main.myPlayer, arenaHeight);
+					Projectile.NewProjectile(x, y, 0f, 0f, ModContent.ProjectileType<PurityBeam>(), damage, 0f, Main.myPlayer, arenaHeight);
 					for (int j = -1; j <= 1; j += 2) {
 						float spawnX = x + j * Main.rand.Next(200, 401);
 						if (spawnX > npc.Center.X + arenaWidth / 2) {
@@ -400,7 +404,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 						else if (spawnX < npc.Center.X - arenaWidth / 2) {
 							spawnX += arenaWidth;
 						}
-						Projectile.NewProjectile(spawnX, y, 0f, 0f, mod.ProjectileType("PurityBeam"), damage, 0f, Main.myPlayer, arenaHeight);
+						Projectile.NewProjectile(spawnX, y, 0f, 0f, ModContent.ProjectileType<PurityBeam>(), damage, 0f, Main.myPlayer, arenaHeight);
 					}
 				}
 				int numExtra = 2 * (difficulty + 1) - 2 * (targets.Count - 1);
@@ -411,7 +415,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 					numExtra--;
 				}
 				for (int k = 0; k < numExtra; k++) {
-					Projectile.NewProjectile(npc.Center.X + Main.rand.Next(-arenaWidth / 2 + 50, arenaWidth / 2 - 50 + 1), y, 0f, 0f, mod.ProjectileType("PurityBeam"), damage, 0f, Main.myPlayer, arenaHeight);
+					Projectile.NewProjectile(npc.Center.X + Main.rand.Next(-arenaWidth / 2 + 50, arenaWidth / 2 - 50 + 1), y, 0f, 0f, ModContent.ProjectileType<PurityBeam>(), damage, 0f, Main.myPlayer, arenaHeight);
 				}
 				attackProgress = (int)(PurityBeam.charge + 60f);
 			}
@@ -424,7 +428,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 		private void SnakeAttack() {
 			if (attackProgress == 0) {
 				int damage = Main.expertMode ? 60 : 80;
-				Projectile.NewProjectile(npc.Center.X, npc.Center.Y, 0f, 0f, mod.ProjectileType("PuritySnake"), damage, 0f, Main.myPlayer, npc.whoAmI, timeMultiplier);
+				Projectile.NewProjectile(npc.Center.X, npc.Center.Y, 0f, 0f, ModContent.ProjectileType<PuritySnake>(), damage, 0f, Main.myPlayer, npc.whoAmI, timeMultiplier);
 				attackProgress = 240;
 			}
 			attackProgress--;
@@ -440,17 +444,17 @@ namespace ExampleMod.NPCs.PuritySpirit
 				float totalTime = numAttacks * timer + 120f;
 				int damage = Main.expertMode ? 55 : 80;
 				for (int k = 0; k < numAttacks; k++) {
-					int proj = Projectile.NewProjectile(npc.Center.X, npc.Center.Y, 0f, 0f, mod.ProjectileType("NullLaser"), damage, 0f, Main.myPlayer, npc.whoAmI, (int)(60f + k * timer));
+					int proj = Projectile.NewProjectile(npc.Center.X, npc.Center.Y, 0f, 0f, ModContent.ProjectileType<NullLaser>(), damage, 0f, Main.myPlayer, npc.whoAmI, (int)(60f + k * timer));
 					Main.projectile[proj].localAI[0] = (int)totalTime;
 					((NullLaser)Main.projectile[proj].modProjectile).warningTime = timer;
-					NetMessage.SendData(27, -1, -1, null, proj);
+					NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, proj);
 				}
 				attackProgress = (int)totalTime;
 			}
 			if (attackProgress % 20 == 0) {
 				PlaySound(2, 15);
 			}
-			Dust.NewDust(npc.position, npc.width, npc.height, mod.DustType("Sparkle"), 0f, 0f, 0, new Color(0, 180, 0), 1.5f);
+			Dust.NewDust(npc.position, npc.width, npc.height, ModContent.DustType<Sparkle>(), 0f, 0f, 0, new Color(0, 180, 0), 1.5f);
 			attackProgress--;
 			if (attackProgress < 0) {
 				attackProgress = 0;
@@ -480,11 +484,11 @@ namespace ExampleMod.NPCs.PuritySpirit
 					for (int k = 0; k < numSpheres; k++) {
 						Vector2 pos = center + radius * new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
 						angle += 2f * (float)Math.PI / numSpheres;
-						int proj = Projectile.NewProjectile(pos.X, pos.Y, 0f, 0f, mod.ProjectileType("PuritySphere"), damage, 0f, Main.myPlayer, center.X, center.Y);
+						int proj = Projectile.NewProjectile(pos.X, pos.Y, 0f, 0f, ModContent.ProjectileType<PuritySphere>(), damage, 0f, Main.myPlayer, center.X, center.Y);
 						Main.projectile[proj].localAI[0] = target;
 						Main.projectile[proj].localAI[1] = rotationSpeed;
 						((PuritySphere)Main.projectile[proj].modProjectile).maxTimer = (int)time;
-						NetMessage.SendData(27, -1, -1, null, proj);
+						NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, proj);
 					}
 				}
 				attackProgress = 60 + (int)time + PuritySphere.strikeTime;
@@ -498,7 +502,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 		private void DoShield(int numShields) {
 			int count = 0;
 			for (int k = 0; k < 200; k++) {
-				if (Main.npc[k].active && Main.npc[k].type == mod.NPCType("PurityShield") && Main.npc[k].ai[0] == npc.whoAmI) {
+				if (Main.npc[k].active && Main.npc[k].type == ModContent.NPCType<PurityShield>() && Main.npc[k].ai[0] == npc.whoAmI) {
 					count++;
 				}
 			}
@@ -511,7 +515,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 			if (shieldTimer >= 300 + 300 * timeMult) {
 				float targetX = npc.Center.X + (Main.rand.Next(2) * 2 - 1) * arenaWidth / 4;
 				float targetY = npc.Center.Y + (Main.rand.Next(2) * 2 - 1) * arenaHeight / 4;
-				NPC.NewNPC((int)npc.Center.X, (int)npc.Center.Y + 40, mod.NPCType("PurityShield"), 0, npc.whoAmI, targetX, targetY);
+				NPC.NewNPC((int)npc.Center.X, (int)npc.Center.Y + 40, ModContent.NPCType<PurityShield>(), 0, npc.whoAmI, targetX, targetY);
 				shieldTimer = 0;
 			}
 		}
@@ -521,12 +525,12 @@ namespace ExampleMod.NPCs.PuritySpirit
 				npc.active = true;
 				npc.life = 1;
 				npc.dontTakeDamage = true;
-				if (Main.netMode == 2) {
+				if (Main.netMode == NetmodeID.Server) {
 					ModPacket netMessage = GetPacket(PuritySpiritMessageType.DontTakeDamage);
 					netMessage.Write(true);
 					netMessage.Send();
 				}
-				if (Main.netMode != 1) {
+				if (Main.netMode != NetmodeID.MultiplayerClient) {
 					stage = 10;
 				}
 				return false;
@@ -566,9 +570,9 @@ namespace ExampleMod.NPCs.PuritySpirit
 		public override void NPCLoot() {
 			/* // Consider using this alternate approach to choosing drops.
 			int trophyChoice = new WeightedRandom<int>(
-				Tuple.Create(mod.ItemType<Items.Placeable.PuritySpiritTrophy>(), 1.0),
-				Tuple.Create(mod.ItemType<Items.Placeable.BunnyTrophy>(), 1.0),
-				Tuple.Create(mod.ItemType<Items.Placeable.TreeTrophy>(), 1.0),
+				Tuple.Create(ItemType<Items.Placeable.PuritySpiritTrophy>(), 1.0),
+				Tuple.Create(ItemType<Items.Placeable.BunnyTrophy>(), 1.0),
+				Tuple.Create(ItemType<Items.Placeable.TreeTrophy>(), 1.0),
 				Tuple.Create(0, 7.0)
 			);
 			if (trophyChoice > 0)
@@ -583,18 +587,18 @@ namespace ExampleMod.NPCs.PuritySpirit
 			{
 				//This is an alternate syntax you can use
 				//var maskChooser = new WeightedRandom<int>();
-				//maskChooser.Add(mod.ItemType<Items.Armor.PuritySpiritMask>());
-				//maskChooser.Add(mod.ItemType<Items.Armor.BunnyMask>());
+				//maskChooser.Add(ItemType<Items.Armor.PuritySpiritMask>());
+				//maskChooser.Add(ItemType<Items.Armor.BunnyMask>());
 				//maskChooser.Add(ItemID.Bunny, 5.0);
 				//int maskChoice = maskChooser;
 
 				int maskChoice = new WeightedRandom<int>(
-					Tuple.Create(mod.ItemType<Items.Armor.PuritySpiritMask>(), 1.0),
-					Tuple.Create(mod.ItemType<Items.Armor.BunnyMask>(), 1.0),
+					Tuple.Create(ItemType<Items.Armor.PuritySpiritMask>(), 1.0),
+					Tuple.Create(ItemType<Items.Armor.BunnyMask>(), 1.0),
 					Tuple.Create((int)ItemID.Bunny, 5.0)
 				);
 				Item.NewItem(npc.getRect(), maskChoice);
-				Item.NewItem(npc.getRect(), mod.ItemType<Items.PurityShield>());
+				Item.NewItem(npc.getRect(), ItemType<Items.PurityShield>());
 			}
 			ExampleWorld.downedPuritySpirit = true; */
 
@@ -602,13 +606,13 @@ namespace ExampleMod.NPCs.PuritySpirit
 			int item = 0;
 			switch (choice) {
 				case 0:
-					item = mod.ItemType("PuritySpiritTrophy");
+					item = ModContent.ItemType<PuritySpiritTrophy>();
 					break;
 				case 1:
-					item = mod.ItemType("BunnyTrophy");
+					item = ModContent.ItemType<BunnyTrophy>();
 					break;
 				case 2:
-					item = mod.ItemType("TreeTrophy");
+					item = ModContent.ItemType<TreeTrophy>();
 					break;
 			}
 			if (item > 0) {
@@ -620,15 +624,15 @@ namespace ExampleMod.NPCs.PuritySpirit
 			else {
 				choice = Main.rand.Next(7);
 				if (choice == 0) {
-					Item.NewItem(npc.getRect(), mod.ItemType("PuritySpiritMask"));
+					Item.NewItem(npc.getRect(), ModContent.ItemType<PuritySpiritMask>());
 				}
 				else if (choice == 1) {
-					Item.NewItem(npc.getRect(), mod.ItemType("BunnyMask"));
+					Item.NewItem(npc.getRect(), ModContent.ItemType<BunnyMask>());
 				}
 				if (choice != 1) {
 					Item.NewItem(npc.getRect(), ItemID.Bunny);
 				}
-				Item.NewItem(npc.getRect(), mod.ItemType("PurityShield"));
+				Item.NewItem(npc.getRect(), ModContent.ItemType<Items.PurityShield>());
 			}
 			if (!ExampleWorld.downedPuritySpirit) {
 				ExampleWorld.downedPuritySpirit = true;
@@ -675,7 +679,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 				return false;
 			}
 			for (int k = 0; k < 200; k++) {
-				if (Main.npc[k].active && Main.npc[k].type == mod.NPCType("PurityShield") && Main.npc[k].ai[0] == npc.whoAmI) {
+				if (Main.npc[k].active && Main.npc[k].type == ModContent.NPCType<PurityShield>() && Main.npc[k].ai[0] == npc.whoAmI) {
 					return false;
 				}
 			}
@@ -690,10 +694,10 @@ namespace ExampleMod.NPCs.PuritySpirit
 
 		private void OnHit(int damage) {
 			damageTotal += damage * 60;
-			if (Main.netMode != 0) {
+			if (Main.netMode != NetmodeID.SinglePlayer) {
 				ModPacket netMessage = GetPacket(PuritySpiritMessageType.Damage);
 				netMessage.Write(damage * 60);
-				if (Main.netMode == 1) {
+				if (Main.netMode == NetmodeID.MultiplayerClient) {
 					netMessage.Write(Main.myPlayer);
 				}
 				netMessage.Send();
@@ -702,7 +706,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 
 		public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit) {
 			if (damageTotal >= dpsCap * 60) {
-				if (!saidRushMessage && Main.netMode != 1) {
+				if (!saidRushMessage && Main.netMode != NetmodeID.MultiplayerClient) {
 					Talk("Oh, in a rush now, are we?");
 					saidRushMessage = true;
 				}
@@ -756,7 +760,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 		}
 
 		private void Talk(string message) {
-			if (Main.netMode != 2) {
+			if (Main.netMode != NetmodeID.Server) {
 				string text = Language.GetTextValue("Mods.ExampleMod.NPCTalk", Lang.GetNPCNameValue(npc.type), message);
 				Main.NewText(text, 150, 250, 150);
 			}
@@ -767,7 +771,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 		}
 
 		private void PlaySound(int type, int style) {
-			if (Main.netMode != 2) {
+			if (Main.netMode != NetmodeID.Server) {
 				if (targets.Contains(Main.myPlayer)) {
 					Main.PlaySound(type, -1, -1, style);
 				}
@@ -820,7 +824,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 			else if (type == PuritySpiritMessageType.Damage) {
 				int damage = reader.ReadInt32();
 				damageTotal += damage;
-				if (Main.netMode == 2) {
+				if (Main.netMode == NetmodeID.Server) {
 					ModPacket netMessage = GetPacket(PuritySpiritMessageType.Damage);
 					int ignore = reader.ReadInt32();
 					netMessage.Write(damage);

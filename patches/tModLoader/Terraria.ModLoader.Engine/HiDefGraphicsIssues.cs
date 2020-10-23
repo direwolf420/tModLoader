@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Terraria.Localization;
 using Terraria.ModLoader.IO;
 
 namespace Terraria.ModLoader.Engine
@@ -106,11 +107,13 @@ namespace Terraria.ModLoader.Engine
 		private static void ReportFatalEngineReload()
 		{
 			Logging.tML.Fatal("Graphics device reset after main engine load");
+			/*
 			Main.Support4K = false;
 			Main.SaveSettings();
 			Logging.tML.Debug("Disabled Main.Support4K");
+			*/
 
-			string reportStatus = "Unknown";
+			string reportStatus = Language.GetTextValue("tModLoader.GraphicsEngineReportUnknown");
 			log4net.LogManager.Shutdown();
 			string logContents = System.IO.File.ReadAllText(Logging.LogPath);
 			try {
@@ -128,11 +131,16 @@ namespace Terraria.ModLoader.Engine
 			}
 			catch {
 				// Can't log since log4net.LogManager.Shutdown happened.
-				reportStatus = "Failure";
+				reportStatus = Language.GetTextValue("tModLoader.GraphicsEngineReportFailure");
 			}
 
 			//var modsAffected = ModContent.HiDefMods.Count == 0 ? "No mods will be affected." : $"The following mods will be affected {string.Join(", ", ModContent.HiDefMods.Select(m => m.DisplayName))}";
-			MessageBox.Show($"tML encountered a crash when testing some experimental graphics features. Experimental features will be disabled. \nPlease restart your game.\nReport Status: {reportStatus}", "Graphics Engine Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			string message = Language.GetTextValue("tModLoader.GraphicsEngineFailureMessage", reportStatus);
+#if !MAC
+			MessageBox.Show(message, Language.GetTextValue("tModLoader.GraphicsEngineFailure"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+#else
+			UI.Interface.MessageBoxShow(message, Language.GetTextValue("tModLoader.GraphicsEngineFailure"));
+#endif
 			Environment.Exit(1);
 		}
 

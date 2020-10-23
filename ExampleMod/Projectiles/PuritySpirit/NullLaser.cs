@@ -1,3 +1,4 @@
+using ExampleMod.Buffs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -40,7 +41,7 @@ namespace ExampleMod.Projectiles.PuritySpirit
 
 		public override void AI() {
 			NPC npc = Main.npc[(int)projectile.ai[0]];
-			if (!npc.active || npc.type != mod.NPCType("PuritySpirit") || projectile.localAI[0] <= 0f) {
+			if (!npc.active || npc.type != ModContent.NPCType<NPCs.PuritySpirit.PuritySpirit>() || projectile.localAI[0] <= 0f) {
 				projectile.Kill();
 				return;
 			}
@@ -116,7 +117,7 @@ namespace ExampleMod.Projectiles.PuritySpirit
 
 		public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit) {
 			if (Main.rand.NextBool(3) || Main.expertMode && Main.rand.NextBool(3)) {
-				target.AddBuff(mod.BuffType("Nullified"), Main.rand.Next(240, 300));
+				target.AddBuff(ModContent.BuffType<Nullified>(), Main.rand.Next(240, 300));
 			}
 		}
 

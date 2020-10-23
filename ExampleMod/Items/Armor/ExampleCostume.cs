@@ -1,5 +1,7 @@
+using ExampleMod.Dusts;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace ExampleMod.Items.Armor
 {
@@ -30,7 +32,7 @@ namespace ExampleMod.Items.Armor
 			item.height = 28;
 			item.accessory = true;
 			item.value = 150000;
-			item.rare = 5;
+			item.rare = ItemRarityID.Pink;
 		}
 
 		public override void UpdateAccessory(Player player, bool hideVisual) {
@@ -50,7 +52,7 @@ namespace ExampleMod.Items.Armor
 
 		public override void UpdateVanity(Player player, EquipType type) {
 			if (Main.rand.NextBool(20)) {
-				Dust.NewDust(player.position, player.width, player.height, mod.DustType<Dusts.Sparkle>());
+				Dust.NewDust(player.position, player.width, player.height, ModContent.DustType<Sparkle>());
 			}
 		}
 	}

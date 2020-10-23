@@ -1,3 +1,4 @@
+using ExampleMod.Dusts;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria;
@@ -37,11 +38,11 @@ namespace ExampleMod.Tiles
 			name = CreateMapEntryName(Name + "_Locked"); // With multiple map entries, you need unique translation keys.
 			name.SetDefault("Locked Example Chest");
 			AddMapEntry(new Color(0, 141, 63), name, MapChestName);
-			dustType = mod.DustType("Sparkle");
+			dustType = ModContent.DustType<Sparkle>();
 			disableSmartCursor = true;
 			adjTiles = new int[] { TileID.Containers };
 			chest = "Example Chest";
-			chestDrop = mod.ItemType("ExampleChest");
+			chestDrop = ModContent.ItemType<Items.Placeable.ExampleChest>();
 		}
 
 		public override ushort GetMapOption(int i, int j) => (ushort)(Main.tile[i, j].frameX / 36);
@@ -68,7 +69,10 @@ namespace ExampleMod.Tiles
 				top--;
 			}
 			int chest = Chest.FindChest(left, top);
-			if (Main.chest[chest].name == "") {
+			if (chest < 0) {
+				return Language.GetTextValue("LegacyChestType.0");
+			}
+			else if (Main.chest[chest].name == "") {
 				return name;
 			}
 			else {
@@ -85,7 +89,7 @@ namespace ExampleMod.Tiles
 			Chest.DestroyChest(i, j);
 		}
 
-		public override void RightClick(int i, int j) {
+		public override bool NewRightClick(int i, int j) {
 			Player player = Main.LocalPlayer;
 			Tile tile = Main.tile[i, j];
 			Main.mouseRightRelease = false;
@@ -109,26 +113,26 @@ namespace ExampleMod.Tiles
 				Main.npcChatText = "";
 			}
 			if (player.editedChestName) {
-				NetMessage.SendData(33, -1, -1, NetworkText.FromLiteral(Main.chest[player.chest].name), player.chest, 1f, 0f, 0f, 0, 0, 0);
+				NetMessage.SendData(MessageID.SyncPlayerChest, -1, -1, NetworkText.FromLiteral(Main.chest[player.chest].name), player.chest, 1f, 0f, 0f, 0, 0, 0);
 				player.editedChestName = false;
 			}
 			bool isLocked = IsLockedChest(left, top);
-			if (Main.netMode == 1 && !isLocked) {
+			if (Main.netMode == NetmodeID.MultiplayerClient && !isLocked) {
 				if (left == player.chestX && top == player.chestY && player.chest >= 0) {
 					player.chest = -1;
 					Recipe.FindRecipes();
 					Main.PlaySound(SoundID.MenuClose);
 				}
 				else {
-					NetMessage.SendData(31, -1, -1, null, left, (float)top, 0f, 0f, 0, 0, 0);
+					NetMessage.SendData(MessageID.RequestChestOpen, -1, -1, null, left, (float)top, 0f, 0f, 0, 0, 0);
 					Main.stackSplit = 600;
 				}
 			}
 			else {
 				if (isLocked) {
-					int key = mod.ItemType<Items.ExampleChestKey>();
-					if (player.ConsumeItem(key) && Chest.Unlock(left, top)){
-						if (Main.netMode == 1) {
+					int key = ModContent.ItemType<Items.ExampleChestKey>();
+					if (player.ConsumeItem(key) && Chest.Unlock(left, top)) {
+						if (Main.netMode == NetmodeID.MultiplayerClient) {
 							NetMessage.SendData(MessageID.Unlock, -1, -1, null, player.whoAmI, 1f, (float)left, (float)top);
 						}
 					}
@@ -153,6 +157,7 @@ namespace ExampleMod.Tiles
 					}
 				}
 			}
+			return true;
 		}
 
 		public override void MouseOver(int i, int j) {
@@ -174,9 +179,9 @@ namespace ExampleMod.Tiles
 			else {
 				player.showItemIconText = Main.chest[chest].name.Length > 0 ? Main.chest[chest].name : "Example Chest";
 				if (player.showItemIconText == "Example Chest") {
-					player.showItemIcon2 = mod.ItemType("ExampleChest");
-					if(Main.tile[left, top].frameX / 36 == 1)
-						player.showItemIcon2 = mod.ItemType<Items.ExampleChestKey>();
+					player.showItemIcon2 = ModContent.ItemType<Items.Placeable.ExampleChest>();
+					if (Main.tile[left, top].frameX / 36 == 1)
+						player.showItemIcon2 = ModContent.ItemType<Items.ExampleChestKey>();
 					player.showItemIconText = "";
 				}
 			}

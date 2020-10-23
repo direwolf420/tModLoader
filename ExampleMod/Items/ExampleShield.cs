@@ -1,6 +1,8 @@
+using ExampleMod.Tiles;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace ExampleMod.Items
 {
@@ -17,7 +19,7 @@ namespace ExampleMod.Items
 			item.width = 24;
 			item.height = 28;
 			item.value = 10000;
-			item.rare = 2;
+			item.rare = ItemRarityID.Green;
 			item.accessory = true;
 			item.defense = 1000;
 			item.lifeRegen = 19;
@@ -45,8 +47,8 @@ namespace ExampleMod.Items
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("EquipMaterial"), 60);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<EquipMaterial>(), 60);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

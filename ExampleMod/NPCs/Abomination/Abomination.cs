@@ -1,3 +1,5 @@
+using ExampleMod.Dusts;
+using ExampleMod.Projectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -75,9 +77,9 @@ namespace ExampleMod.NPCs.Abomination
 		}
 
 		public override void AI() {
-			if (Main.netMode != 1 && npc.localAI[0] == 0f) {
+			if (Main.netMode != NetmodeID.MultiplayerClient && npc.localAI[0] == 0f) {
 				for (int k = 0; k < 5; k++) {
-					int captive = NPC.NewNPC((int)npc.position.X, (int)npc.position.Y, mod.NPCType("CaptiveElement"));
+					int captive = NPC.NewNPC((int)npc.position.X, (int)npc.position.Y, ModContent.NPCType<CaptiveElement>());
 					Main.npc[captive].ai[0] = npc.whoAmI;
 					Main.npc[captive].ai[1] = k;
 					Main.npc[captive].ai[2] = 50 * (k + 1);
@@ -103,7 +105,7 @@ namespace ExampleMod.NPCs.Abomination
 				}
 			}
 			moveCool -= 1f;
-			if (Main.netMode != 1 && moveCool <= 0f) {
+			if (Main.netMode != NetmodeID.MultiplayerClient && moveCool <= 0f) {
 				npc.TargetClosest(false);
 				player = Main.player[npc.target];
 				double angle = Main.rand.NextDouble() * 2.0 * Math.PI;
@@ -152,7 +154,7 @@ namespace ExampleMod.NPCs.Abomination
 				captiveRotation -= 2f * (float)Math.PI;
 			}
 			attackCool -= 1f;
-			if (Main.netMode != 1 && attackCool <= 0f) {
+			if (Main.netMode != NetmodeID.MultiplayerClient && attackCool <= 0f) {
 				attackCool = 200f + 200f * (float)npc.life / (float)npc.lifeMax + (float)Main.rand.Next(200);
 				Vector2 delta = player.Center - npc.Center;
 				float magnitude = (float)Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y);
@@ -166,7 +168,7 @@ namespace ExampleMod.NPCs.Abomination
 				if (Main.expertMode) {
 					damage = (int)(damage / Main.expertDamage);
 				}
-				Projectile.NewProjectile(npc.Center.X, npc.Center.Y, delta.X, delta.Y, mod.ProjectileType("ElementBall"), damage, 3f, Main.myPlayer, BuffID.OnFire, 600f);
+				Projectile.NewProjectile(npc.Center.X, npc.Center.Y, delta.X, delta.Y, ModContent.ProjectileType<ElementBall>(), damage, 3f, Main.myPlayer, BuffID.OnFire, 600f);
 				npc.netUpdate = true;
 			}
 			if (Main.expertMode) {
@@ -175,13 +177,13 @@ namespace ExampleMod.NPCs.Abomination
 			if (Main.rand.NextBool()) {
 				float radius = (float)Math.Sqrt(Main.rand.Next(sphereRadius * sphereRadius));
 				double angle = Main.rand.NextDouble() * 2.0 * Math.PI;
-				Dust.NewDust(new Vector2(npc.Center.X + radius * (float)Math.Cos(angle), npc.Center.Y + radius * (float)Math.Sin(angle)), 0, 0, mod.DustType("Sparkle"), 0f, 0f, 0, default(Color), 1.5f);
+				Dust.NewDust(new Vector2(npc.Center.X + radius * (float)Math.Cos(angle), npc.Center.Y + radius * (float)Math.Sin(angle)), 0, 0, ModContent.DustType<Sparkle>(), 0f, 0f, 0, default(Color), 1.5f);
 			}
 		}
 
 		private void ExpertLaser() {
 			laserTimer--;
-			if (laserTimer <= 0 && Main.netMode != 1) {
+			if (laserTimer <= 0 && Main.netMode != NetmodeID.MultiplayerClient) {
 				if (npc.localAI[0] == 2f) {
 					int laser1Index;
 					int laser2Index;
@@ -190,7 +192,7 @@ namespace ExampleMod.NPCs.Abomination
 					}
 					else {
 						for (laser1Index = 0; laser1Index < 200; laser1Index++) {
-							if (Main.npc[laser1Index].type == mod.NPCType("CaptiveElement") && laser1 == Main.npc[laser1Index].ai[1]) {
+							if (Main.npc[laser1Index].type == ModContent.NPCType<CaptiveElement>() && laser1 == Main.npc[laser1Index].ai[1]) {
 								break;
 							}
 						}
@@ -200,7 +202,7 @@ namespace ExampleMod.NPCs.Abomination
 					}
 					else {
 						for (laser2Index = 0; laser2Index < 200; laser2Index++) {
-							if (Main.npc[laser2Index].type == mod.NPCType("CaptiveElement") && laser2 == Main.npc[laser2Index].ai[1]) {
+							if (Main.npc[laser2Index].type == ModContent.NPCType<CaptiveElement>() && laser2 == Main.npc[laser2Index].ai[1]) {
 								break;
 							}
 						}
@@ -210,7 +212,7 @@ namespace ExampleMod.NPCs.Abomination
 					if (Main.expertMode) {
 						damage = (int)(damage / Main.expertDamage);
 					}
-					Projectile.NewProjectile(pos.X, pos.Y, 0f, 0f, mod.ProjectileType("ElementLaser"), damage, 0f, Main.myPlayer, laser1Index, laser2Index);
+					Projectile.NewProjectile(pos.X, pos.Y, 0f, 0f, ModContent.ProjectileType<ElementLaser>(), damage, 0f, Main.myPlayer, laser1Index, laser2Index);
 				}
 				else {
 					npc.localAI[0] = 2f;
@@ -258,9 +260,9 @@ namespace ExampleMod.NPCs.Abomination
 			for (int k = 0; k < damage / npc.lifeMax * 100.0; k++) {
 				Dust.NewDust(npc.position, npc.width, npc.height, 5, hitDirection, -1f, 0, default(Color), 1f);
 			}
-			if (Main.netMode != 1 && npc.life <= 0) {
+			if (Main.netMode != NetmodeID.MultiplayerClient && npc.life <= 0) {
 				Vector2 spawnAt = npc.Center + new Vector2(0f, (float)npc.height / 2f);
-				NPC.NewNPC((int)spawnAt.X, (int)spawnAt.Y, mod.NPCType("AbominationRun"));
+				NPC.NewNPC((int)spawnAt.X, (int)spawnAt.Y, ModContent.NPCType<AbominationRun>());
 			}
 		}
 

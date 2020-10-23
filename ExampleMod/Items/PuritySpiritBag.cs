@@ -1,3 +1,5 @@
+using ExampleMod.Items.Armor;
+using ExampleMod.NPCs.PuritySpirit;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -16,7 +18,7 @@ namespace ExampleMod.Items
 			item.consumable = true;
 			item.width = 24;
 			item.height = 24;
-			item.rare = 11;
+			item.rare = ItemRarityID.Purple;
 			item.expert = true;
 		}
 
@@ -29,17 +31,17 @@ namespace ExampleMod.Items
 			player.TryGettingDevArmor();
 			int choice = Main.rand.Next(7);
 			if (choice == 0) {
-				player.QuickSpawnItem(mod.ItemType("PuritySpiritMask"));
+				player.QuickSpawnItem(ModContent.ItemType<PuritySpiritMask>());
 			}
 			else if (choice == 1) {
-				player.QuickSpawnItem(mod.ItemType("BunnyMask"));
+				player.QuickSpawnItem(ModContent.ItemType<BunnyMask>());
 			}
 			if (choice != 1) {
 				player.QuickSpawnItem(ItemID.Bunny);
 			}
-			player.QuickSpawnItem(mod.ItemType("PurityShield"));
+			player.QuickSpawnItem(ModContent.ItemType<PurityShield>());
 		}
 
-		public override int BossBagNPC => mod.NPCType("PuritySpirit");
+		public override int BossBagNPC => ModContent.NPCType<PuritySpirit>();
 	}
 }

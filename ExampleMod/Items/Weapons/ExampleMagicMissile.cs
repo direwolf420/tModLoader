@@ -1,3 +1,4 @@
+using ExampleMod.Tiles;
 using System;
 using Terraria;
 using Terraria.ID;
@@ -20,14 +21,14 @@ namespace ExampleMod.Items.Weapons
 			item.height = 26;
 			item.useTime = 15;
 			item.useAnimation = 15;
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.noMelee = true;
 			item.channel = true; //Channel so that you can held the weapon [Important]
 			item.knockBack = 8;
 			item.value = Item.sellPrice(silver : 50);
-			item.rare = 3;
+			item.rare = ItemRarityID.Orange;
 			item.UseSound = SoundID.Item9;
-			item.shoot = mod.ProjectileType<Projectiles.MagicMissile>();
+			item.shoot = ModContent.ProjectileType<Projectiles.MagicMissile>();
 			item.shootSpeed = 10f;
 		}
 
@@ -49,8 +50,8 @@ namespace ExampleMod.Items.Weapons
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 20);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 20);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

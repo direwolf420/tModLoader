@@ -15,6 +15,7 @@ using Terraria.Localization;
 using Terraria.ModLoader.Audio;
 using Terraria.ModLoader.Exceptions;
 using Terraria.ModLoader.IO;
+using Terraria.ModLoader.UI;
 using Terraria.Utilities;
 
 namespace Terraria.ModLoader
@@ -237,7 +238,7 @@ namespace Terraria.ModLoader
 			if (Code == null)
 				return;
 
-			Interface.loadModsProgress.SubProgressText = Language.GetTextValue("tModLoader.MSFinishingResourceLoading");
+			Interface.loadMods.SubProgressText = Language.GetTextValue("tModLoader.MSFinishingResourceLoading");
 			while (AsyncLoadQueue.Count > 0)
 				AsyncLoadQueue.Dequeue().Wait();
 
@@ -657,7 +658,7 @@ namespace Terraria.ModLoader
 						if (split < 0)
 							continue; // lines witout a = are ignored
 						string key = line.Substring(0, split).Trim().Replace(" ", "_");
-						string value = line.Substring(split + 1).Trim();
+						string value = line.Substring(split + 1); // removed .Trim() since sometimes it is desired.
 						if (value.Length == 0) {
 							continue;
 						}

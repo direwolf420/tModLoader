@@ -18,21 +18,21 @@ namespace ExampleMod.Items.Weapons
 			item.height = 30;
 			item.useTime = 35;
 			item.useAnimation = 35;
-			item.useStyle = 5;
+			item.useStyle = ItemUseStyleID.HoldingOut;
 			item.noMelee = true;
 			item.knockBack = 4f;
 			item.value = Item.sellPrice(0, 10, 0, 0);
-			item.rare = 8;
+			item.rare = ItemRarityID.Yellow;
 			item.UseSound = mod.GetLegacySoundSlot(SoundType.Item, "Sounds/Item/Wooo");
 			item.autoReuse = true;
-			item.shoot = mod.ProjectileType("Wisp");
+			item.shoot = ModContent.ProjectileType<Projectiles.Wisp>();
 			item.shootSpeed = 6f;
-			item.useAmmo = mod.ItemType("Wisp");        //Restrict the type of ammo the weapon can use, so that the weapon cannot use other ammos
+			item.useAmmo = ModContent.ItemType<Wisp>();        //Restrict the type of ammo the weapon can use, so that the weapon cannot use other ammos
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 10);
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 10);
 			recipe.AddTile(TileID.WorkBenches);
 			recipe.SetResult(this);
 			recipe.AddRecipe();

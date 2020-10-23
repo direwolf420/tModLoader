@@ -6,64 +6,43 @@ using static Terraria.ModLoader.Setup.Program;
 
 namespace Terraria.ModLoader.Setup
 {
-	public class SetupDebugTask : Task
+	public class SetupDebugTask : SetupOperation
 	{
 		private bool roslynCompileFailed;
 		private bool tMLFNACompileFailed;
 
 		public SetupDebugTask(ITaskInterface taskInterface) : base(taskInterface) { }
 
-		public override bool ConfigurationDialog() {
-			if (File.Exists(TerrariaPath) && File.Exists(TerrariaServerPath))
-				return true;
-
-			return (bool)taskInterface.Invoke(new Func<bool>(SelectTerrariaDialog));
-		}
-
 		public override void Run() {
-			taskInterface.SetStatus("Copying References");
-
-			taskInterface.SetStatus("Generating launchSettings.json");
-			var launchSettingsPath = Path.Combine(baseDir, "src/tModLoader/Properties/launchSettings.json");
-			CreateParentDirectory(launchSettingsPath);
-			File.WriteAllText(launchSettingsPath, DebugConfig);
-
 			taskInterface.SetStatus("Updating ModCompile version");
-			var modCompile = Path.Combine(SteamDir, "ModCompile");
+			var modCompile = Path.Combine(tMLSteamDir, "ModCompile");
 			UpdateModCompileVersion(modCompile);
 
-			var references = new[] { "FNA.dll" };
-			foreach (var dll in references)
-				Copy(Path.Combine(baseDir, "references/"+dll), Path.Combine(modCompile, dll));
+			taskInterface.SetStatus("Compiling RoslynWrapper");
 
-			bool msBuildOnPath = RunCmd(Path.Combine(baseDir, "RoslynWrapper"), "where",
-				"msbuild",
-				(s) => Console.WriteLine(s), null, null, taskInterface.CancellationToken()
-			) == 0;
-			if (!msBuildOnPath)
-				throw new Exception("msbuild not found on PATH");
+			//Compile Roslyn.
+			roslynCompileFailed = RunCmd("RoslynWrapper", "dotnet", "build", cancel: taskInterface.CancellationToken) != 0;
 
-			roslynCompileFailed = RunCmd(Path.Combine(baseDir, "RoslynWrapper"), "msbuild",
-				"RoslynWrapper.sln /restore /p:Configuration=Release",
-				null, null, null, taskInterface.CancellationToken()
-			) != 0;
+			//Try to install Roslyn's libraries.
 
-			var roslynRefs = new[] {"RoslynWrapper.dll", "Microsoft.CodeAnalysis.dll", "Microsoft.CodeAnalysis.CSharp.dll", 
+			string[] roslynRefs = new[] {"RoslynWrapper.dll", "Microsoft.CodeAnalysis.dll", "Microsoft.CodeAnalysis.CSharp.dll",
 				"System.Collections.Immutable.dll", "System.Reflection.Metadata.dll", "System.IO.FileSystem.dll", "System.IO.FileSystem.Primitives.dll",
 				"System.Security.Cryptography.Algorithms.dll", "System.Security.Cryptography.Encoding.dll", "System.Security.Cryptography.Primitives.dll", "System.Security.Cryptography.X509Certificates.dll" };
-			foreach (var dll in roslynRefs)
-				Copy(Path.Combine(baseDir, "RoslynWrapper/bin/Release/net46", dll), Path.Combine(modCompile, dll));
 
+			foreach (string dll in roslynRefs) {
+				string path = Path.Combine("RoslynWrapper/bin/Release/net46", dll);
+
+				if (!roslynCompileFailed || File.Exists(path))
+					Copy(path, Path.Combine(modCompile, dll));
+			}
+
+			//Compile FNA tML.
 			taskInterface.SetStatus("Compiling tModLoader.FNA.exe");
-			tMLFNACompileFailed = RunCmd(Path.Combine(baseDir, "solutions"), "msbuild",
-				"tModLoader.sln /restore /p:Configuration=MacRelease",
-				null, null, null, taskInterface.CancellationToken()
-			) != 0;
+			tMLFNACompileFailed = RunCmd("src/tModLoader", "dotnet", "build -c MacRelease", cancel: taskInterface.CancellationToken) != 0;
 		}
 
-		private void UpdateModCompileVersion(string modCompileDir)
-		{
-			var modLoaderCsPath = Path.Combine(baseDir, "src", "tModLoader", "Terraria.ModLoader", "ModLoader.cs");
+		private void UpdateModCompileVersion(string modCompileDir) {
+			var modLoaderCsPath = Path.Combine("src", "tModLoader", "Terraria.ModLoader", "ModLoader.cs");
 			var r = new Regex(@"new Version\((.+?)\).+?string branchName.+?""(.*?)"".+?int beta.+?(\d+?)", RegexOptions.Singleline);
 			var match = r.Match(File.ReadAllText(modLoaderCsPath));
 
@@ -92,20 +71,5 @@ namespace Terraria.ModLoader.Setup
 					"Failed to compile tModLoader.FNA.exe\r\nJust build it from the tModLoader solution.",
 					"MSBuild Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
-
-		private static string DebugConfig => @"{
-  ""profiles"": {
-    ""Terraria"": {
-      ""commandName"": ""Executable"",
-      ""executablePath"": ""%steamdir%/tModLoaderDebug.exe"",
-      ""workingDirectory"": ""%steamdir%""
-    },
-    ""TerrariaServer"": {
-      ""commandName"": ""Executable"",
-      ""executablePath"": ""%steamdir%/tModLoaderServerDebug.exe"",
-      ""workingDirectory"": ""%steamdir%""
-    }
-  }
-}".Replace("%steamdir%", SteamDir.Replace('\\', '/'));
 	}
 }

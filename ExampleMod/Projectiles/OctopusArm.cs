@@ -1,9 +1,11 @@
+using ExampleMod.NPCs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace ExampleMod.Projectiles
 {
@@ -52,7 +54,7 @@ namespace ExampleMod.Projectiles
 
 		public override void AI() {
 			NPC npc = Main.npc[octopus];
-			if (!npc.active || npc.type != mod.NPCType("Octopus")) {
+			if (!npc.active || npc.type != ModContent.NPCType<Octopus>()) {
 				return;
 			}
 			projectile.timeLeft = 2;
@@ -132,7 +134,7 @@ namespace ExampleMod.Projectiles
 			}
 			projectile.rotation += angleSpeed;
 			length += lengthSpeed;
-			if (Main.netMode == 2) {
+			if (Main.netMode == NetmodeID.Server) {
 				netUpdateCounter++;
 				if (netUpdateCounter >= 300) {
 					projectile.netUpdate = true;

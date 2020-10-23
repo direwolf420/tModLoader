@@ -13,7 +13,7 @@ namespace ExampleMod.Items
 		public override void SetStaticDefaults() {
 			// See here for help on using Tags: http://terraria.gamepedia.com/Chat#Tags
 			Tooltip.SetDefault("How are you feeling today?"
-				+ $"\n[c/FF0000:Colors ][c/00FF00:are ][c/0000FF:fun ]and so are items: [i:{item.type}][i:{mod.ItemType<CarKey>()}][i/s123:{ItemID.Ectoplasm}]");
+				+ $"\n[c/FF0000:Colors ][c/00FF00:are ][c/0000FF:fun ]and so are items: [i:{item.type}][i:{ModContent.ItemType<CarKey>()}][i/s123:{ItemID.Ectoplasm}]");
 
 			Main.RegisterItemAnimation(item.type, new DrawAnimationVertical(30, 4));
 			ItemID.Sets.ItemNoGravity[item.type] = true;
@@ -23,7 +23,7 @@ namespace ExampleMod.Items
 			item.width = 20;
 			item.height = 20;
 			item.value = 100;
-			item.rare = 1;
+			item.rare = ItemRarityID.Blue;
 		}
 
 		public override Color? GetAlpha(Color lightColor) {
@@ -54,15 +54,11 @@ namespace ExampleMod.Items
 
 			// You can also remove a specific line, if you have access to that object:
 			//tooltips.Remove(tooltipLine);
-
-			// You can also remove a range from the list
-			// For example, this would remove the first 4 lines:
-			//tooltips.RemoveRange(0, 4);
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

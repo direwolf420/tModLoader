@@ -34,11 +34,11 @@ namespace ExampleMod.Tiles
 
 		public override void KillMultiTile(int i, int j, int frameX, int frameY) {
 			//Projectile.NewProjectile((float)(k * 16) + 15.5f, (float)(num4 * 16 + 16), 0f, 0f, 99, 70, 10f, Main.myPlayer, 0f, 0f);
-			if (!WorldGen.gen && Main.netMode != 1) {
+			if (!WorldGen.gen && Main.netMode != NetmodeID.MultiplayerClient) {
 				Projectile.NewProjectile((i + 1.5f) * 16f, (j + 1.5f) * 16f, 0f, 0f, ProjectileID.Boulder, 70, 10f, Main.myPlayer, 0f, 0f);
 			}
 
-			//Item.NewItem(i * 16, j * 16, 48, 48, mod.ItemType("ExampleCutTileItem"));
+			//Item.NewItem(i * 16, j * 16, 48, 48, ItemType<ExampleCutTileItem>());
 		}
 	}
 
@@ -50,7 +50,7 @@ namespace ExampleMod.Tiles
 
 		public override void SetDefaults() {
 			item.CloneDefaults(ItemID.DartTrap);
-			item.createTile = mod.TileType("ExampleCutTileTile");
+			item.createTile = ModContent.TileType<ExampleCutTileTile>();
 			item.value = 1000;
 		}
 

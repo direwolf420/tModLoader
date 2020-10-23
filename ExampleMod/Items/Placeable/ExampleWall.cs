@@ -1,4 +1,5 @@
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace ExampleMod.Items.Placeable
 {
@@ -16,14 +17,14 @@ namespace ExampleMod.Items.Placeable
 			item.autoReuse = true;
 			item.useAnimation = 15;
 			item.useTime = 7;
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.consumable = true;
-			item.createWall = mod.WallType("ExampleWall");
+			item.createWall = ModContent.WallType<Walls.ExampleWall>();
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleBlock"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleBlock>());
 			recipe.SetResult(this, 4);
 			recipe.AddRecipe();
 		}

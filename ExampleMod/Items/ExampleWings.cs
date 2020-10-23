@@ -1,5 +1,7 @@
+using ExampleMod.Tiles;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ID;
 
 namespace ExampleMod.Items
 {
@@ -8,8 +10,7 @@ namespace ExampleMod.Items
 	{
 		public override bool Autoload(ref string name)
 		{
-			return !ExampleMod.exampleServerConfig.DisableExampleWings;
-			//return !mod.GetConfig<ExampleConfigServer>().DisableExampleWings;
+			return !ModContent.GetInstance<ExampleConfigServer>().DisableExampleWings;
 		}
 
 		public override void SetStaticDefaults() {
@@ -20,7 +21,7 @@ namespace ExampleMod.Items
 			item.width = 22;
 			item.height = 20;
 			item.value = 10000;
-			item.rare = 2;
+			item.rare = ItemRarityID.Green;
 			item.accessory = true;
 		}
 		//these wings use the same values as the solar wings
@@ -44,8 +45,8 @@ namespace ExampleMod.Items
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("EquipMaterial"), 60);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<EquipMaterial>(), 60);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

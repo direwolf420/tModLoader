@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ExampleMod.NPCs;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameInput;
@@ -45,9 +46,9 @@ namespace ExampleMod.UI
 			base.Update(gameTime);
 
 			// talkNPC is the index of the NPC the player is currently talking to. By checking talkNPC, we can tell when the player switches to another NPC or closes the NPC chat dialog.
-			if (Main.LocalPlayer.talkNPC == -1 || Main.npc[Main.LocalPlayer.talkNPC].type != ExampleMod.Instance.NPCType("Example Person")) {
+			if (Main.LocalPlayer.talkNPC == -1 || Main.npc[Main.LocalPlayer.talkNPC].type != ModContent.NPCType<ExamplePerson>()) {
 				// When that happens, we can set the state of our UserInterface to null, thereby closing this UIState. This will trigger OnDeactivate above.
-				ExampleMod.Instance.ExamplePersonUserInterface.SetState(null);
+				ModContent.GetInstance<ExampleMod>().ExamplePersonUserInterface.SetState(null);
 			}
 		}
 
@@ -94,7 +95,7 @@ namespace ExampleMod.UI
 				if (hoveringOverReforgeButton) {
 					Main.hoverItemName = Language.GetTextValue("LegacyInterface.19");
 					if (!tickPlayed) {
-						Main.PlaySound(12, -1, -1, 1, 1f, 0f);
+						Main.PlaySound(SoundID.MenuTick, -1, -1, 1, 1f, 0f);
 					}
 					tickPlayed = true;
 					Main.LocalPlayer.mouseInterface = true;
@@ -107,10 +108,10 @@ namespace ExampleMod.UI
 						reforgeItem = reforgeItem.CloneWithModdedDataFrom(_vanillaItemSlot.Item);
 						// This is the main effect of this slot. Giving the Awesome prefix 90% of the time and the ReallyAwesome prefix the other 10% of the time. All for a constant 1 gold. Useless, but informative.
 						if (Main.rand.NextBool(10)) {
-							reforgeItem.Prefix(ExampleMod.Instance.PrefixType("ReallyAwesome"));
+							reforgeItem.Prefix(ModContent.GetInstance<ExampleMod>().PrefixType("ReallyAwesome"));
 						}
 						else {
-							reforgeItem.Prefix(ExampleMod.Instance.PrefixType("Awesome"));
+							reforgeItem.Prefix(ModContent.GetInstance<ExampleMod>().PrefixType("Awesome"));
 						}
 						_vanillaItemSlot.Item = reforgeItem.Clone();
 						_vanillaItemSlot.Item.position.X = Main.LocalPlayer.position.X + (float)(Main.LocalPlayer.width / 2) - (float)(_vanillaItemSlot.Item.width / 2);

@@ -1,3 +1,4 @@
+using ExampleMod.Dusts;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -8,8 +9,8 @@ namespace ExampleMod.Walls
 	{
 		public override void SetDefaults() {
 			Main.wallHouse[Type] = true;
-			dustType = mod.DustType("Sparkle");
-			drop = mod.ItemType("ExampleWall");
+			dustType = ModContent.DustType<Sparkle>();
+			drop = ModContent.ItemType<Items.Placeable.ExampleWall>();
 			AddMapEntry(new Color(150, 150, 150));
 		}
 

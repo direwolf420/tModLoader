@@ -1,3 +1,4 @@
+using ExampleMod.Dusts;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -48,7 +49,7 @@ namespace ExampleMod.Projectiles
 		public virtual void CreateDust() {
 			Color? color = GetColor();
 			if (color.HasValue) {
-				int dust = Dust.NewDust(projectile.position, projectile.width, projectile.height, mod.DustType("Flame"), 0f, 0f, 0, color.Value);
+				int dust = Dust.NewDust(projectile.position, projectile.width, projectile.height, ModContent.DustType<Flame>(), 0f, 0f, 0, color.Value);
 				Main.dust[dust].velocity *= 0.4f;
 				Main.dust[dust].velocity += projectile.velocity;
 			}
@@ -67,7 +68,7 @@ namespace ExampleMod.Projectiles
 			if (projectile.ai[0] == 44f) {
 				return "Frost Ball";
 			}
-			if (projectile.ai[0] == mod.BuffType<Buffs.EtherealFlames>()) {
+			if (projectile.ai[0] == ModContent.BuffType<Buffs.EtherealFlames>()) {
 				return "Ethereal Fireball";
 			}
 			if (projectile.ai[0] == 70f) {
@@ -86,7 +87,7 @@ namespace ExampleMod.Projectiles
 			if (projectile.ai[0] == 44f) {
 				return new Color(0, 230, 230);
 			}
-			if (projectile.ai[0] == mod.BuffType<Buffs.EtherealFlames>()) {
+			if (projectile.ai[0] == ModContent.BuffType<Buffs.EtherealFlames>()) {
 				return new Color(0, 153, 230);
 			}
 			if (projectile.ai[0] == 70f) {

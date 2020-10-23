@@ -4,6 +4,7 @@ using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
+using Terraria.ID;
 
 namespace ExampleMod.Items
 {
@@ -20,7 +21,7 @@ namespace ExampleMod.Items
 			item.height = 20;
 			item.maxStack = 999;
 			item.value = 100;
-			item.rare = 1;
+			item.rare = ItemRarityID.Blue;
 		}
 
 		private Vector2 boxSize; // stores the size of our tooltip box
@@ -99,7 +100,7 @@ namespace ExampleMod.Items
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType<ExampleItem>());
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}

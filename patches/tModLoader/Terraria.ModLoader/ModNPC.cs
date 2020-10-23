@@ -273,7 +273,7 @@ namespace Terraria.ModLoader
 		}
 
 		/// <summary>
-		/// Allows you to make things happen whenever this NPC is hit, such as creating dust or gores.
+		/// Allows you to make things happen whenever this NPC is hit, such as creating dust or gores. This hook is client side. Usually when something happens when an npc dies such as item spawning, you use NPCLoot, but you can use HitEffect paired with a check for `if (npc.life <= 0)` to do client-side death effects, such as spawning dust, gore, or death sounds.
 		/// </summary>
 		/// <param name="hitDirection"></param>
 		/// <param name="damage"></param>
@@ -320,9 +320,17 @@ namespace Terraria.ModLoader
 		}
 
 		/// <summary>
-		/// Allows you to make things happen when this NPC dies (for example, dropping items).
+		/// Allows you to make things happen when this NPC dies (for example, dropping items and setting ModWorld fields). This hook runs on the server/single player. For client-side effects, such as dust, gore, and sounds, see HitEffect
 		/// </summary>
 		public virtual void NPCLoot() {
+		}
+
+        /// <summary>
+        /// Allows you to make things happen when this NPC is caught. Ran Serverside
+        /// </summary>
+        /// <param name="player">The player catching this NPC</param>
+        /// <param name="item">The item that will be spawned</param>
+        public virtual void OnCatchNPC(Player player, Item item) {
 		}
 
 		/// <summary>
@@ -432,7 +440,7 @@ namespace Terraria.ModLoader
 		}
 
 		/// <summary>
-		/// Allows you to modify the damage, knockback, etc., that this NPC takes from a projectile.
+		/// Allows you to modify the damage, knockback, etc., that this NPC takes from a projectile. This method is only called for the owner of the projectile, meaning that in multi-player, projectiles owned by a player call this method on that client, and projectiles owned by the server such as enemy projectiles call this method on the server.
 		/// </summary>
 		/// <param name="projectile"></param>
 		/// <param name="damage"></param>
@@ -466,9 +474,9 @@ namespace Terraria.ModLoader
 		}
 
 		/// <summary>
-		/// Allows you to customize the boss head texture used by this NPC based on its state.
+		/// Allows you to customize the boss head texture used by this NPC based on its state. Set index to -1 to stop the texture from being displayed.
 		/// </summary>
-		/// <param name="index"></param>
+		/// <param name="index">The index for NPCID.Sets.BossHeadTextures</param>
 		public virtual void BossHeadSlot(ref int index) {
 		}
 
@@ -518,6 +526,15 @@ namespace Terraria.ModLoader
 		/// <param name="spriteBatch"></param>
 		/// <param name="drawColor"></param>
 		public virtual void PostDraw(SpriteBatch spriteBatch, Color drawColor) {
+		}
+
+		/// <summary>
+		/// When used in conjunction with "npc.hide = true", allows you to specify that this npc should be drawn behind certain elements. Add the index to one of Main.DrawCacheNPCsMoonMoon, DrawCacheNPCsOverPlayers, DrawCacheNPCProjectiles, or DrawCacheNPCsBehindNonSolidTiles.
+		/// </summary>
+		/// <param name="npc"></param>
+		/// <param name="index"></param>
+		public virtual void DrawBehind(int index)
+		{
 		}
 
 		/// <summary>

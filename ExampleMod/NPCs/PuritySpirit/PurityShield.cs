@@ -39,7 +39,7 @@ namespace ExampleMod.NPCs.PuritySpirit
 
 		public override void AI() {
 			NPC owner = Main.npc[(int)npc.ai[0]];
-			if (!owner.active || owner.type != mod.NPCType("PuritySpirit")) {
+			if (!owner.active || owner.type != ModContent.NPCType<PuritySpirit>()) {
 				npc.active = false;
 				return;
 			}

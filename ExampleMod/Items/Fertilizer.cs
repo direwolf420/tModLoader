@@ -1,3 +1,4 @@
+using ExampleMod.Tiles;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -14,10 +15,10 @@ namespace ExampleMod.Items
 			item.width = 22;
 			item.height = 22;
 			item.maxStack = 99;
-			item.rare = 1;
+			item.rare = ItemRarityID.Blue;
 			item.useAnimation = 15;
 			item.useTime = 10;
-			item.useStyle = 1;
+			item.useStyle = ItemUseStyleID.SwingThrow;
 			item.UseSound = SoundID.Item81;
 			item.consumable = true;
 		}
@@ -39,8 +40,8 @@ namespace ExampleMod.Items
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 10);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 10);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this, 5);
 			recipe.AddRecipe();
 		}

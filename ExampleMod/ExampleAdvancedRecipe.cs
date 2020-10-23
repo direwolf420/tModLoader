@@ -31,11 +31,11 @@ namespace ExampleMod
 			//If EoC was defeated we will try find out is there is required npc nearby player
 			foreach (NPC npc in Main.npc) {
 				//If npc isn't active or isn't our needed type, we will skip iteration
-				if (!npc.active && npc.type != NeededNPCType) {
+				if (!npc.active || npc.type != NeededNPCType) {
 					continue;
 				}
 				//Otherwise we will compare positions
-				if (Vector2.Distance(Main.LocalPlayer.Center, npc.Center) <= Range) {
+				if (Main.LocalPlayer.DistanceSQ(npc.Center) <= Range * Range) {
 					foundNPC = true;
 					break;
 				}
@@ -64,7 +64,7 @@ namespace ExampleMod
 		public override void SetDefaults() {
 			item.width = 26;
 			item.height = 26;
-			item.rare = 1;
+			item.rare = ItemRarityID.Blue;
 		}
 
 		//Using our custom recipe type

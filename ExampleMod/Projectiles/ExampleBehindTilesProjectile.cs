@@ -1,3 +1,5 @@
+using ExampleMod.Items;
+using ExampleMod.Tiles;
 using System.Collections.Generic;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -40,14 +42,14 @@ namespace ExampleMod.Projectiles
 
 		public override void SetDefaults() {
 			item.CloneDefaults(ItemID.Shuriken);
-			item.shoot = mod.ProjectileType("ExampleBehindTilesProjectile");
+			item.shoot = ModContent.ProjectileType<ExampleBehindTilesProjectile>();
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
 			recipe.AddIngredient(ItemID.Shuriken, 10);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 1);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 1);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this, 10);
 			recipe.AddRecipe();
 		}

@@ -18,7 +18,7 @@ namespace ExampleMod.Items.Abomination
 			item.width = 24;
 			item.height = 24;
 			item.value = Item.buyPrice(0, 10, 0, 0);
-			item.rare = 9;
+			item.rare = ItemRarityID.Cyan;
 			item.expert = true;
 			item.accessory = true;
 			item.damage = 120;
@@ -60,7 +60,7 @@ namespace ExampleMod.Items.Abomination
 					int maxAccessoryIndex = 5 + player.extraAccessorySlots;
 					for (int i = 3; i < 3 + maxAccessoryIndex; i++) {
 						// We need "slot != i" because we don't care what is currently in the slot we will be replacing.
-						if (slot != i && player.armor[i].type == mod.ItemType<SixColorShield>()) {
+						if (slot != i && player.armor[i].type == ModContent.ItemType<SixColorShield>()) {
 							return false;
 						}
 					}

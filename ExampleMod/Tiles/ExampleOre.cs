@@ -23,8 +23,8 @@ namespace ExampleMod.Tiles
 			AddMapEntry(new Color(152, 171, 198), name);
 
 			dustType = 84;
-			drop = mod.ItemType("ExampleOre");
-			soundType = 21;
+			drop = ModContent.ItemType<Items.Placeable.ExampleOre>();
+			soundType = SoundID.Tink;
 			soundStyle = 1;
 			//mineResist = 4f;
 			//minPick = 200;

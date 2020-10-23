@@ -33,7 +33,7 @@ namespace ExampleMod.Items
 			// Instead of copying these values, we can clone and modify the ones we want to copy
 			item.CloneDefaults(ItemID.AmethystHook);
 			item.shootSpeed = 18f; // how quickly the hook is shot.
-			item.shoot = mod.ProjectileType("ExampleHookProjectile");
+			item.shoot = ModContent.ProjectileType<ExampleHookProjectile>();
 		}
 	}
 
@@ -119,6 +119,13 @@ namespace ExampleMod.Items
 
 		public override void GrapplePullSpeed(Player player, ref float speed) {
 			speed = 4;
+		}
+
+		public override void GrappleTargetPoint(Player player, ref float grappleX, ref float grappleY) {
+			Vector2 dirToPlayer = projectile.DirectionTo(player.Center);
+			float hangDist = 50f;
+			grappleX += dirToPlayer.X * hangDist;
+			grappleY += dirToPlayer.Y * hangDist;
 		}
 
 		public override bool PreDraw(SpriteBatch spriteBatch, Color lightColor) {

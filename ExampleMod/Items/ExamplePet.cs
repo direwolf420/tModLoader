@@ -1,3 +1,4 @@
+using ExampleMod.Tiles;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -14,14 +15,14 @@ namespace ExampleMod.Items
 
 		public override void SetDefaults() {
 			item.CloneDefaults(ItemID.ZephyrFish);
-			item.shoot = mod.ProjectileType("ExamplePet");
-			item.buffType = mod.BuffType("ExamplePet");
+			item.shoot = ModContent.ProjectileType<Projectiles.Pets.ExamplePet>();
+			item.buffType = ModContent.BuffType<Buffs.ExamplePet>();
 		}
 
 		public override void AddRecipes() {
 			ModRecipe recipe = new ModRecipe(mod);
-			recipe.AddIngredient(mod.ItemType("ExampleItem"), 10);
-			recipe.AddTile(mod.TileType("ExampleWorkbench"));
+			recipe.AddIngredient(ModContent.ItemType<ExampleItem>(), 10);
+			recipe.AddTile(ModContent.TileType<ExampleWorkbench>());
 			recipe.SetResult(this);
 			recipe.AddRecipe();
 		}
