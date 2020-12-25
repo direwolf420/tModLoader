@@ -95,13 +95,14 @@ namespace Terraria.ModLoader.IO
 				return;
 
 			var tables = TileTables.Create();
+			ushort pendingType = UnloadedTilesWorld.PendingType;
 			foreach (var tileTag in tag.GetList<TagCompound>("tileMap")) {
 				ushort type = (ushort)tileTag.GetShort("value");
 				string modName = tileTag.GetString("mod");
 				string name = tileTag.GetString("name");
 				tables.tiles[type] = ModContent.TryFind(modName, name, out ModTile tile) ? tile.Type : (ushort)0;
 				if (tables.tiles[type] == 0) {
-					tables.tiles[type] = ModContent.Find<ModTile>("ModLoader/PendingUnloadedTile").Type;
+					tables.tiles[type] = pendingType;
 					tables.tileModNames[type] = modName;
 					tables.tileNames[type] = name;
 				}
@@ -285,7 +286,7 @@ namespace Terraria.ModLoader.IO
 					tile.frameX = -1;
 					tile.frameY = -1;
 				}
-				if (tile.type == ModContent.Find<ModTile>("ModLoader/PendingUnloadedTile").Type
+				if (tile.type == UnloadedTilesWorld.PendingType
 					&& tables.tileNames.ContainsKey(saveType)) {
 					UnloadedTileInfo info;
 					if (tables.frameImportant[saveType]) {

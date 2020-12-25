@@ -1,14 +1,26 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Terraria.ModLoader.IO;
 
 namespace Terraria.ModLoader.Default
 {
-	class UnloadedTilesWorld : ModWorld
+	internal class UnloadedTilesWorld : ModWorld
 	{
+		/// <summary>
+		/// <see cref="UnloadedTileInfo"/>s that are not able to be restored in the current state of the world (and saved for the next world load)
+		/// </summary>
 		internal List<UnloadedTileInfo> infos = new List<UnloadedTileInfo>();
+
+		/// <summary>
+		/// Populated during <see cref="TileIO.ReadModTile"/>, detecting tiles that lost their loaded mod, to then turn them into unloaded tiles
+		/// </summary>
 		internal List<UnloadedTileInfo> pendingInfos = new List<UnloadedTileInfo>();
+
+		//TODO UnloadedWall
+
+		internal static ushort UnloadedType => ModContent.Find<ModTile>("ModLoader/UnloadedTile").Type;
+
+		internal static ushort PendingType => ModContent.Find<ModTile>("ModLoader/PendingUnloadedTile").Type;
 
 		public override void Initialize() {
 			infos.Clear();
@@ -24,8 +36,10 @@ namespace Terraria.ModLoader.Default
 		public override void Load(TagCompound tag) {
 			List<ushort> canRestore = new List<ushort>();
 			bool canRestoreFlag = false;
-			foreach (var infoTag in tag.GetList<TagCompound>("list")) {
+			var list = tag.GetList<TagCompound>("list");
+			foreach (var infoTag in list) {
 				if (!infoTag.ContainsKey("mod")) {
+					//infos entries get nulled out once restored, leading to an empty tag. This reverts it
 					infos.Add(null);
 					canRestore.Add(0);
 					continue;
@@ -47,18 +61,20 @@ namespace Terraria.ModLoader.Default
 			if (canRestoreFlag) {
 				RestoreTiles(canRestore);
 				for (int k = 0; k < canRestore.Count; k++) {
-					if (canRestore[k] > 0) {
-						infos[k] = null;
-					}
+					if (canRestore[k] > 0)
+						infos[k] = null; //Restored infos don't need to be saved
 				}
 			}
-			if (pendingInfos.Count > 0) {
+			if (pendingInfos.Count > 0)
 				ConfirmPendingInfo();
-			}
 		}
 
+		/// <summary>
+		/// Converts unloaded tiles to their original type
+		/// </summary>
+		/// <param name="canRestore">List of types that can be restored, indexed by the tiles frameID through <see cref="UnloadedTileFrame"/></param>
 		private void RestoreTiles(List<ushort> canRestore) {
-			ushort unloadedType = ModContent.Find<ModTile>("ModLoader/UnloadedTile").Type;
+			ushort unloadedType = UnloadedType;
 			for (int x = 0; x < Main.maxTilesX; x++) {
 				for (int y = 0; y < Main.maxTilesY; y++) {
 					if (Main.tile[x, y].type == unloadedType) {
@@ -76,27 +92,29 @@ namespace Terraria.ModLoader.Default
 			}
 		}
 
+		/// <summary>
+		/// If there are pending tiles (after a mod disable), convert them to unloaded tiles, and refill <see cref="infos"/>
+		/// </summary>
 		private void ConfirmPendingInfo() {
 			List<int> truePendingID = new List<int>();
 			int nextID = 0;
 			for (int k = 0; k < pendingInfos.Count; k++) {
-				while (nextID < infos.Count && infos[nextID] != null) {
+				while (nextID < infos.Count && infos[nextID] != null)
 					nextID++;
-				}
-				if (nextID == infos.Count) {
+
+				if (nextID == infos.Count)
 					infos.Add(pendingInfos[k]);
-				}
-				else {
+				else
 					infos[nextID] = pendingInfos[k];
-				}
+
 				truePendingID.Add(nextID);
 			}
-			ushort pendingType = ModContent.Find<ModTile>("ModLoader/PendingUnloadedTile").Type;
-			ushort unloadedType = ModContent.Find<ModTile>("ModLoader/UnloadedTile").Type;
+			ushort pendingType = PendingType;
+			ushort unloadedType = UnloadedType;
 			for (int x = 0; x < Main.maxTilesX; x++) {
 				for (int y = 0; y < Main.maxTilesY; y++) {
-					if (Main.tile[x, y].type == pendingType) {
-						Tile tile = Main.tile[x, y];
+					Tile tile = Main.tile[x, y];
+					if (tile.type == pendingType) {
 						UnloadedTileFrame frame = new UnloadedTileFrame(tile.frameX, tile.frameY);
 						frame = new UnloadedTileFrame(truePendingID[frame.FrameID]);
 						tile.type = unloadedType;
