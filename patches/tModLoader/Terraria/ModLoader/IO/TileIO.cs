@@ -20,6 +20,7 @@ namespace Terraria.ModLoader.IO
 			internal IDictionary<ushort, ushort> walls;
 			internal IDictionary<ushort, string> tileModNames;
 			internal IDictionary<ushort, string> tileNames;
+			//TODO ModWall
 
 			internal static TileTables Create() {
 				TileTables tables = new TileTables {
@@ -31,6 +32,19 @@ namespace Terraria.ModLoader.IO
 				};
 				return tables;
 			}
+		}
+
+		internal static class TileIOFlags
+		{
+			internal const byte None = 0;
+			internal const byte ModTile = 1;
+			internal const byte FrameXInt16 = 2;
+			internal const byte FrameYInt16 = 4;
+			internal const byte TileColor = 8;
+			internal const byte ModWall = 16;
+			internal const byte WallColor = 32;
+			internal const byte NextTilesAreSame = 64;
+			internal const byte NextModTile = 128;
 		}
 
 		internal static TagCompound SaveTiles() {
@@ -98,6 +112,7 @@ namespace Terraria.ModLoader.IO
 				string modName = wallTag.GetString("mod");
 				string name = wallTag.GetString("name");
 				tables.walls[type] = ModContent.TryFind(modName, name, out ModWall wall) ? wall.Type : (ushort)0;
+				//TODO UnloadedWall
 			}
 			using (var memoryStream = new MemoryStream(tag.GetByteArray("data")))
 			using (var reader = new BinaryReader(memoryStream))
@@ -106,7 +121,7 @@ namespace Terraria.ModLoader.IO
 		}
 
 		internal static void WriteTileData(BinaryWriter writer, bool[] hasTile, bool[] hasWall) {
-			byte skip = 0;
+			byte skip = 0; //Track amount of tiles that don't contain mod data
 			bool nextModTile = false;
 			int i = 0;
 			int j = 0;
@@ -123,8 +138,9 @@ namespace Terraria.ModLoader.IO
 					WriteModTile(ref i, ref j, writer, ref nextModTile, hasTile, hasWall);
 				}
 				else {
-					skip++;
+					skip++; //Skip over vanilla tiles
 					if (skip == 255) {
+						//Write additional skip
 						writer.Write(skip);
 						skip = 0;
 					}
@@ -142,11 +158,11 @@ namespace Terraria.ModLoader.IO
 			bool nextModTile = false;
 			do {
 				if (!nextModTile) {
-					byte skip = reader.ReadByte();
-					while (skip == 255) {
+					byte skip = reader.ReadByte(); //Track amount of tiles that don't contain mod data
+					while (skip == 255) { //Read additional skip if it exists
 						for (byte k = 0; k < 255; k++) {
 							if (!NextTile(ref i, ref j)) {
-								return;
+								return; //Skip over vanilla tiles
 							}
 						}
 						skip = reader.ReadByte();
@@ -167,12 +183,13 @@ namespace Terraria.ModLoader.IO
 
 		internal static void WriteModTile(ref int i, ref int j, BinaryWriter writer, ref bool nextModTile, bool[] hasTile, bool[] hasWall) {
 			Tile tile = Main.tile[i, j];
-			byte flags = 0;
-			byte[] data = new byte[11];
+			byte flags = TileIOFlags.None;
+			byte[] data = new byte[11]; //data[0] will be filled with the flags, hence why index starts with 1 below
 			int index = 1;
 			if (tile.active() && tile.type >= TileID.Count) {
 				hasTile[tile.type] = true;
-				flags |= 1;
+				flags |= TileIOFlags.ModTile;
+				//Converts a UInt16 into two bytes, reversed by reader.ReadInt16
 				data[index] = (byte)tile.type;
 				index++;
 				data[index] = (byte)(tile.type >> 8);
@@ -181,33 +198,34 @@ namespace Terraria.ModLoader.IO
 					data[index] = (byte)tile.frameX;
 					index++;
 					if (tile.frameX >= 256) {
-						flags |= 2;
+						flags |= TileIOFlags.FrameXInt16;
 						data[index] = (byte)(tile.frameX >> 8);
 						index++;
 					}
 					data[index] = (byte)tile.frameY;
 					index++;
 					if (tile.frameY >= 256) {
-						flags |= 4;
+						flags |= TileIOFlags.FrameYInt16;
 						data[index] = (byte)(tile.frameY >> 8);
 						index++;
 					}
 				}
 				if (tile.color() != 0) {
-					flags |= 8;
 					data[index] = tile.color();
+					flags |= TileIOFlags.TileColor;
 					index++;
 				}
 			}
 			if (tile.wall >= WallID.Count) {
 				hasWall[tile.wall] = true;
-				flags |= 16;
+				flags |= TileIOFlags.ModWall;
+				//Converts a UInt16 into two bytes, reversed by reader.ReadInt16
 				data[index] = (byte)tile.wall;
 				index++;
 				data[index] = (byte)(tile.wall >> 8);
 				index++;
 				if (tile.wallColor() != 0) {
-					flags |= 32;
+					flags |= TileIOFlags.WallColor;
 					data[index] = tile.wallColor();
 					index++;
 				}
@@ -216,13 +234,15 @@ namespace Terraria.ModLoader.IO
 			int nextJ = j;
 			byte sameCount = 0;
 			while (NextTile(ref nextI, ref nextJ)) {
-				if (tile.isTheSameAs(Main.tile[nextI, nextJ]) && sameCount < 255) {
+				Tile nextTile = Main.tile[nextI, nextJ];
+				if (tile.isTheSameAs(nextTile) && sameCount < 255) {
+					// Optimization by not writing potentially duplicate data: simply write the amount of tiles that are identical
 					sameCount++;
 					i = nextI;
 					j = nextJ;
 				}
-				else if (HasModData(Main.tile[nextI, nextJ])) {
-					flags |= 128;
+				else if (HasModData(nextTile)) {
+					flags |= TileIOFlags.NextModTile;
 					nextModTile = true;
 					break;
 				}
@@ -231,7 +251,7 @@ namespace Terraria.ModLoader.IO
 				}
 			}
 			if (sameCount > 0) {
-				flags |= 64;
+				flags |= TileIOFlags.NextTilesAreSame;
 				data[index] = sameCount;
 				index++;
 			}
@@ -243,18 +263,18 @@ namespace Terraria.ModLoader.IO
 			byte flags;
 			flags = reader.ReadByte();
 			Tile tile = Main.tile[i, j];
-			if ((flags & 1) == 1) {
+			if ((flags & TileIOFlags.ModTile) == TileIOFlags.ModTile) {
 				tile.active(true);
 				ushort saveType = reader.ReadUInt16();
 				tile.type = tables.tiles[saveType];
 				if (tables.frameImportant[saveType]) {
-					if ((flags & 2) == 2) {
+					if ((flags & TileIOFlags.FrameXInt16) == TileIOFlags.FrameXInt16) {
 						tile.frameX = reader.ReadInt16();
 					}
 					else {
 						tile.frameX = reader.ReadByte();
 					}
-					if ((flags & 4) == 4) {
+					if ((flags & TileIOFlags.FrameYInt16) == TileIOFlags.FrameYInt16) {
 						tile.frameY = reader.ReadInt16();
 					}
 					else {
@@ -285,18 +305,18 @@ namespace Terraria.ModLoader.IO
 					tile.frameX = pendingFrame.FrameX;
 					tile.frameY = pendingFrame.FrameY;
 				}
-				if ((flags & 8) == 8) {
+				if ((flags & TileIOFlags.TileColor) == TileIOFlags.TileColor) {
 					tile.color(reader.ReadByte());
 				}
 				WorldGen.tileCounts[tile.type] += j <= Main.worldSurface ? 5 : 1;
 			}
-			if ((flags & 16) == 16) {
+			if ((flags & TileIOFlags.ModWall) == TileIOFlags.ModWall) {
 				tile.wall = tables.walls[reader.ReadUInt16()];
-				if ((flags & 32) == 32) {
+				if ((flags & TileIOFlags.WallColor) == TileIOFlags.WallColor) {
 					tile.wallColor(reader.ReadByte());
 				}
 			}
-			if ((flags & 64) == 64) {
+			if ((flags & TileIOFlags.NextTilesAreSame) == TileIOFlags.NextTilesAreSame) {
 				byte sameCount = reader.ReadByte();
 				for (byte k = 0; k < sameCount; k++) {
 					NextTile(ref i, ref j);
@@ -304,14 +324,12 @@ namespace Terraria.ModLoader.IO
 					WorldGen.tileCounts[tile.type] += j <= Main.worldSurface ? 5 : 1;
 				}
 			}
-			if ((flags & 128) == 128) {
+			if ((flags & TileIOFlags.NextModTile) == TileIOFlags.NextModTile) {
 				nextModTile = true;
 			}
 		}
 
-		private static bool HasModData(Tile tile) {
-			return (tile.active() && tile.type >= TileID.Count) || tile.wall >= WallID.Count;
-		}
+		private static bool HasModData(Tile tile) => (tile.active() && tile.type >= TileID.Count) || tile.wall >= WallID.Count;
 
 		private static bool NextTile(ref int i, ref int j) {
 			j++;
