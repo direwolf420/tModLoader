@@ -37,6 +37,9 @@ namespace Terraria.ModLoader.Default
 			AddContent(new UnloadedTile());
 			AddContent(new UnloadedTile("PendingUnloadedTile"));
 
+			AddContent(new UnloadedWall());
+			AddContent(new UnloadedWall("PendingUnloadedWall"));
+
 			PatronSets = GetContent<PatreonItem>().GroupBy(t => t.InternalSetName).Select(set => set.ToArray()).ToArray();
 			DeveloperSets = GetContent<DeveloperItem>().GroupBy(t => t.InternalSetName).Select(set => set.ToArray()).ToArray();
 		}
