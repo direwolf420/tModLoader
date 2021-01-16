@@ -276,7 +276,14 @@ namespace Terraria.ModLoader.IO
 
 		internal static void LoadModData(IList<TagCompound> list) {
 			foreach (var tag in list) {
-				if (ModContent.TryFind(tag.GetString("mod"), tag.GetString("name"), out ModSystem system)) {
+				string modName = tag.GetString("mod");
+				string name = tag.GetString("name");
+
+				//Band-aid fix for legacy data until a ModType-wide solution is found
+				if (modName == "ModLoader" && name == "UnloadedTilesWorld")
+					name = ModContent.GetInstance<UnloadedTilesSystem>().Name;
+
+				if (ModContent.TryFind(modName, name, out ModSystem system)) {
 					try {
 						system.LoadWorldData(tag.GetCompound("data"));
 					}
