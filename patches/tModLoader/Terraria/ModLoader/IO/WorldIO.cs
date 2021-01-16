@@ -264,9 +264,15 @@ namespace Terraria.ModLoader.IO
 				if (data == null)
 					continue;
 
+				string systemModName = system.Mod.Name;
+				string systemName = system.Name;
+
+				if (systemModName == "ModLoader" && systemName == ModContent.GetInstance<UnloadedTilesSystem>().Name)
+					systemName = "UnloadedTilesWorld";
+
 				list.Add(new TagCompound {
-					["mod"] = system.Mod.Name,
-					["name"] = system.Name,
+					["mod"] = systemModName,
+					["name"] = systemName,
 					["data"] = data
 				});
 			}
