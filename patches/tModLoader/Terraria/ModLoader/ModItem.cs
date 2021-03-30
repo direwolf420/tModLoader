@@ -43,6 +43,8 @@ namespace Terraria.ModLoader
 
 		public virtual string FemaleTexture => Texture + "_FemaleBody";
 
+		public virtual bool Composite => false;
+
 		public ModItem() {
 			Item = new Item { ModItem = this };
 		}

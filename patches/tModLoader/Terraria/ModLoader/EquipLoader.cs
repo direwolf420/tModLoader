@@ -62,6 +62,7 @@ namespace Terraria.ModLoader
 			//Textures
 			Array.Resize(ref TextureAssets.ArmorHead, nextEquip[EquipType.Head]);
 			Array.Resize(ref TextureAssets.ArmorBody, nextEquip[EquipType.Body]);
+			Array.Resize(ref TextureAssets.ArmorBodyComposite, nextEquip[EquipType.Body]);
 			Array.Resize(ref TextureAssets.FemaleBody, nextEquip[EquipType.Body]);
 			Array.Resize(ref TextureAssets.ArmorArm, nextEquip[EquipType.Body]);
 			Array.Resize(ref TextureAssets.ArmorLeg, nextEquip[EquipType.Legs]);
@@ -85,13 +86,25 @@ namespace Terraria.ModLoader
 				foreach (var entry in equipTextures[type]) {
 					int slot = entry.Key;
 					EquipTexture texture = entry.Value;
-					
-					GetTextureArray(type)[slot] = ModContent.GetTexture(texture.Texture);
+
+					bool composite = false;
 
 					if (type == EquipType.Body) {
-						TextureAssets.FemaleBody[slot] = ModContent.GetTexture(femaleTextures[slot]);
-						TextureAssets.ArmorArm[slot] = ModContent.GetTexture(armTextures[slot]);
+						int itemType = slotToId[type][slot];
+						ModItem modItem = ItemLoader.GetItem(itemType);
+
+						ArmorIDs.Body.Sets.UsesNewFramingCode[slot] = modItem?.Composite ?? false;
+
+						if (!ArmorIDs.Body.Sets.UsesNewFramingCode[slot]) {
+							TextureAssets.FemaleBody[slot] = ModContent.GetTexture(femaleTextures[slot]);
+							TextureAssets.ArmorArm[slot] = ModContent.GetTexture(armTextures[slot]);
+						}
+						else {
+							composite = true;
+						}
 					}
+
+					GetTextureArray(type, composite)[slot] = ModContent.GetTexture(texture.Texture);
 				}
 			}
 
@@ -162,11 +175,13 @@ namespace Terraria.ModLoader
 			return 0;
 		}
 
-		internal static Asset<Texture2D>[] GetTextureArray(EquipType type) {
+		internal static Asset<Texture2D>[] GetTextureArray(EquipType type, bool composite) {
 			switch (type) {
 				case EquipType.Head:
 					return TextureAssets.ArmorHead;
 				case EquipType.Body:
+					if (composite)
+						return TextureAssets.ArmorBodyComposite;
 					return TextureAssets.ArmorBody;
 				case EquipType.Legs:
 					return TextureAssets.ArmorLeg;

@@ -9,6 +9,8 @@ namespace ExampleMod.Content.Items.Armor
 	[AutoloadEquip(EquipType.Body)]
 	public class ExampleBreastplate : ModItem
 	{
+		public override bool Composite => true;
+		
 		public override void SetStaticDefaults() {
 			base.SetStaticDefaults();
 			DisplayName.SetDefault("Example Breastplate");

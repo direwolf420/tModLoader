@@ -167,7 +167,7 @@ namespace Terraria.ModLoader
 			EquipLoader.equipTextures[type][slot] = equipTexture;
 			equipTextures[Tuple.Create(item.Name, type)] = equipTexture;
 
-			if (type == EquipType.Body) {
+			if (type == EquipType.Body && !item.Composite) {
 				if (!ModContent.TextureExists(item.FemaleTexture)) {
 					EquipLoader.femaleTextures[slot] = texture;
 				}
